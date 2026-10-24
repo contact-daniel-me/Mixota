@@ -1571,7 +1571,7 @@
 					{
 						name   : 'About Mixota',
 						action : function () {
-							window.open ('/about.html');
+							window.open ('/about');
 						}
 					}
 				]
@@ -1594,7 +1594,7 @@
 			'<span class="pk_brand_name">mixota</span>' +
 			'<span class="pk_brand_attr">by growiota</span>';
 		brand.onclick = function () {
-			window.open ('/about.html', '_blank');
+			window.open ('/about', '_blank');
 		};
 
 		var _name = 'TopHeader',
