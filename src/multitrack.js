@@ -607,9 +607,10 @@
 				'</div>' +
 				'<div class="pk_mt_main">' +
 					'<div class="pk_mt_ruler"></div>' +
-					'<div class="pk_mt_lanes"></div>' +
-					'<div class="pk_tmpMsg pk_mt_empty">Drag and Drop Audio Files in this window, or click ' +
-					'<a>here to use a sample</a></div>' +
+					'<div class="pk_tmpMsg pk_mt_empty" style="display:flex;flex-direction:column;align-items:center;gap:10px;">' +
+					'<img src="mascot.png" style="width:48px;height:48px;border-radius:50%;box-shadow:0 0 16px rgba(0,229,160,0.35);border:1px solid #00E5A0;" alt="Mixo"/>' +
+					'<span>Drag and Drop Audio Files in this window, or click ' +
+					'<a>here to use a sample</a></span></div>' +
 					'<div class="pk_mt_region wavesurfer-region"></div>' +
 					'<div class="pk_mt_playhead"></div>' +
 					'<div class="pk_mt_marker"></div>' +

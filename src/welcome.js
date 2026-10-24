@@ -96,9 +96,8 @@ setTimeout(function () {
 		w.localStorage && w.localStorage.setItem ('k', 1);
 	}
 
-	if ( ((Math.random () * 100) >> 0) < change) return ;
-	PKAudioEditor._deps.Wlc ();
-
+	// Welcome modal auto-popup disabled
+	// PKAudioEditor._deps.Wlc ();
 }, 320);
 
 })( window, document, PKAudioEditor );

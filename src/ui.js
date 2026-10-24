@@ -242,6 +242,107 @@
 
 	//top bar config list
 	function _topbarConfig ( app, ui ) {
+		function openShortcutsModal () {
+			var isMac = /mac|iphone|ipad|ipod/.test ((navigator.platform || '').toLowerCase ());
+			var modKey = isMac ? 'Cmd' : 'Ctrl';
+
+			var shortcutRow = function ( desc, keys ) {
+				return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#111312;border:1px solid #202422;border-radius:4px;">' +
+					'<span style="color:#A0A8A3;font-size:12px;font-family:Inter,system-ui,sans-serif;">' + desc + '</span>' +
+					'<span style="background:#181B19;border:1px solid #292E2B;color:#00E5A3;font-family:\'JetBrains Mono\',monospace;font-size:11px;font-weight:600;padding:2px 7px;border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.06);white-space:nowrap;margin-left:12px;">' + keys + '</span>' +
+				'</div>';
+			};
+
+			var sectionHeader = function ( icon, title ) {
+				return '<div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#00E5A3;margin:14px 0 8px 0;display:flex;align-items:center;gap:6px;font-family:Inter,system-ui,sans-serif;">' +
+					'<span>' + icon + '</span> ' + title +
+				'</div>';
+			};
+
+			var bodyHtml = '<div style="max-width:620px;width:calc(100vw - 44px);max-height:calc(100vh - 280px);overflow-y:auto;overflow-x:hidden;padding-right:4px;-webkit-overflow-scrolling:touch;box-sizing:border-box;">' +
+				'<div style="color:#A0A8A3;font-size:12px;margin-bottom:12px;line-height:1.5;">Quick keyboard reference for common playback, editing, navigation, and multitrack commands.</div>' +
+
+				sectionHeader ('▶', 'Playback &amp; Transport') +
+				'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:6px;">' +
+					shortcutRow ('Play / Stop', 'Space') +
+					shortcutRow ('Pause Playback', 'Shift + Space') +
+					shortcutRow ('Toggle Loop Playback', 'L') +
+					shortcutRow ('Record (Toggle)', 'R') +
+					shortcutRow ('Skip Backward / Forward', '← / →') +
+					shortcutRow ('Seek Region / Track Edge', 'Shift + ← / →') +
+					shortcutRow ('Center to Playhead', 'Tab') +
+				'</div>' +
+
+				sectionHeader ('✂', 'Editing &amp; Clipboard') +
+				'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:6px;">' +
+					shortcutRow ('Undo', modKey + ' + Z / Shift + Z') +
+					shortcutRow ('Redo', modKey + ' + Y / Shift + Y') +
+					shortcutRow ('Cut Selection', modKey + ' + X / Shift + X') +
+					shortcutRow ('Copy Selection', modKey + ' + C / Shift + C') +
+					shortcutRow ('Paste Clipboard', modKey + ' + V / Shift + V') +
+					shortcutRow ('Delete Selection', 'Del / Backspace') +
+					shortcutRow ('Trim to Selection', 'Shift + K') +
+					shortcutRow ('Insert Silence', 'Shift + N') +
+					shortcutRow ('Crossfade Clips (Multitrack)', 'X') +
+				'</div>' +
+
+				sectionHeader ('🔍', 'Selection, Zoom &amp; Markers') +
+				'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:6px;">' +
+					shortcutRow ('Select All', modKey + ' + A / Shift + A') +
+					shortcutRow ('Deselect All', '~ (Tilde)') +
+					shortcutRow ('Clear Selection', 'Q') +
+					shortcutRow ('Reset Zoom', '0') +
+					shortcutRow ('Zoom In / Out', '+ / -') +
+					shortcutRow ('Add Marker', 'M') +
+					shortcutRow ('Previous / Next Marker', '[ / ]') +
+					shortcutRow ('Track Up / Down', '↑ / ↓') +
+					shortcutRow ('Export / Download', modKey + ' + S / Shift + S') +
+					shortcutRow ('Keyboard Shortcuts Help', '?') +
+				'</div>' +
+			'</div>';
+
+			var modal = new PKSimpleModal ({
+				title: '<div style="display:flex;align-items:center;gap:8px;"><span style="color:#00E5A3;font-size:15px;">⌨</span><span style="font-size:14px;font-family:Inter,system-ui,sans-serif;font-weight:600;color:#F5F7F6;">Keyboard Shortcuts</span><span style="font-size:11px;color:#A0A8A3;margin-left:auto;">Mixota Reference</span></div>',
+				clss: 'pk_bigger',
+				ondestroy: function ( q ) {
+					app.ui.InteractionHandler.on = false;
+					app.ui.KeyHandler.removeCallback ('modalTempShortcuts');
+				},
+				body: bodyHtml,
+				setup: function ( q ) {
+					app.ui.InteractionHandler.checkAndSet ('modal');
+					app.ui.KeyHandler.addCallback ('modalTempShortcuts', function ( e ) {
+						q.Destroy ();
+					}, [27]);
+				}
+			});
+
+			modal.Show ();
+
+			var cancelBtn = modal.el.querySelector ('.pk_modal_cancel');
+			if (cancelBtn) {
+				cancelBtn.innerHTML = '&nbsp; Close &nbsp;';
+				cancelBtn.style.cssText = 'border-color:var(--bd);color:var(--fg-0);background:var(--bg-3);transition:all var(--tr);';
+				cancelBtn.onmouseenter = function() {
+					this.style.borderColor = 'var(--ac)';
+					this.style.color = 'var(--ac)';
+					this.style.boxShadow = '0 0 8px var(--ac-glow)';
+				};
+				cancelBtn.onmouseleave = function() {
+					this.style.borderColor = 'var(--bd)';
+					this.style.color = 'var(--fg-0)';
+					this.style.boxShadow = 'none';
+				};
+			}
+		}
+
+		if (app && app.ui) {
+			app.ui.openShortcutsModal = openShortcutsModal;
+		}
+		if (w.PKAudioEditor) {
+			w.PKAudioEditor.openShortcutsModal = openShortcutsModal;
+		}
+
 		return [
 			{
 				name:'File',
@@ -1457,67 +1558,9 @@
 				name:'Help',
 				children:[
 					{
-						name   : 'Store Offline Version',
+						name   : 'Shortcuts <span class="pk_shrtct">[?]</span>',
 						action : function () {
-							if (window.location.href.indexOf('-cache') > 0) {
-
-								function onUpdateReady ( e ) {
-									if (confirm ('Would you like to refresh the page to load the newer version?'))
-										window.location.reload();
-								}
-								function downLoading ( e ) {
-									OneUp ('Downloading newer version', 1500);
-								}
-
-								window.applicationCache.onupdateready = onUpdateReady;
-								window.applicationCache.ondownloading = downLoading;
-
-								if(window.applicationCache.status === window.applicationCache.UPDATEREADY) {
-									onUpdateReady ();
-								}
-
-								window.applicationCache.update ();
-
-								return ;
-							}
-
-							var message = 'This will open a new window that will try to store a local version in your browser'; // nicer text
-
-							new PKSimpleModal ({
-								title : 'Open Offline Version?',
-
-								ondestroy : function( q ) {
-									app.ui.InteractionHandler.on = false;
-									app.ui.KeyHandler.removeCallback ('modalTempErr');
-								},
-
-								buttons:[
-									{
-										title:'OPEN',
-										callback: function( q ) {
-											window.open ('/index-cache.html');
-											q.Destroy ();
-										}
-									}
-								],
-								body:'<p>' + message + '</p>',
-								setup:function( q ) {
-									app.fireEvent ('RequestPause');
-									app.fireEvent( 'RequestRegionClear');
-
-									app.ui.InteractionHandler.checkAndSet ('modal');
-									app.ui.KeyHandler.addCallback ('modalTempErr', function ( e ) {
-										q.Destroy ();
-									}, [27]);
-								}
-							}).Show ();
-							// -
-						},
-						setup: function ( obj ) {
-							if (window.location.href.indexOf('-cache') > 0)
-							{
-								obj.innerHTML = 'Update Offline Version';
-							}
+							openShortcutsModal ();
 						}
 					},
 
@@ -1529,48 +1572,6 @@
 						name   : 'About Mixota',
 						action : function () {
 							window.open ('/about.html');
-						}
-					},
-
-					{
-						name   : 'See Welcome Message',
-						action : function () {
-							PKAudioEditor._deps.Wlc ();
-						}
-					},
-					// {
-					// 	name   : 'About Mixota',
-					// 	action : function () {
-					// 		window.open ('/about.html');
-					// 	}
-					// },
-
-					// {
-					// 	name:'---'
-					// },
-
-					{
-						name   : 'Acknowledgements',
-						action : function () {
-							new PKSimpleModal({
-								title: 'Acknowledgements',
-								ondestroy: function( q ) {
-									PKAudioEditor.ui.InteractionHandler.on = false;
-									PKAudioEditor.ui.KeyHandler.removeCallback ('modalTempAck');
-								},
-								body:'<div style="max-width:460px;padding:8px 0;font-size:13px;color:#A0A8A3;font-family:Inter,system-ui,sans-serif;line-height:1.6">'+
-									'Mixota is an independent browser-based audio editor developed by <strong style="color:#F5F7F6">growiota</strong>.<br/><br/>'+
-									'Built upon the open-source audio editor <a href="https://github.com/pkalogiros/audiomass" target="_blank" style="color:#00E5A3">AudioMass</a> by Pantelis Kalogiros, licensed under the MIT License.<br/><br/>'+
-									'Bundled third-party libraries retain their original licenses. See THIRD_PARTY_NOTICES.md for details.'+
-									'</div>',
-								setup:function( q ) {
-									PKAudioEditor.ui.InteractionHandler.checkAndSet ('modal');
-									PKAudioEditor.ui.KeyHandler.addCallback ('modalTempAck', function ( e ) {
-										q.Destroy ();
-									}, [27]);
-								}
-							}).Show ();
-							document.getElementsByClassName('pk_modal_cancel')[0].innerHTML = '\u00a0 OK \u00a0';
 						}
 					}
 				]
@@ -1585,14 +1586,11 @@
 		var header = d.createElement ( 'div' );
 		header.className = 'pk_hdr pk_noselect';
 
-		// Mixota Brand Wordmark
+		// Mixota Brand Wordmark with Mascot Avatar
 		var brand = d.createElement ( 'div' );
 		brand.className = 'pk_brand';
 		brand.title = 'Mixota — A product by growiota';
-		brand.innerHTML = '<span class="pk_brand_icon">' +
-			'<svg viewBox="0 0 24 24" fill="none" stroke="#00E5A3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
-			'<path d="M2 12h2.5l2-6 3.5 11 3-15 3 18 3-11 2.5 3H22"/>' +
-			'</svg></span>' +
+		brand.innerHTML = '<span class="pk_brand_mascot" style="width:22px;height:22px;border-radius:50%;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;border:1.5px solid #00E5A0;margin-right:8px;vertical-align:middle;box-shadow:0 0 10px rgba(0,229,160,0.35);"><img src="mascot.png" style="width:100%;height:100%;object-fit:cover;" alt="Mixo"/></span>' +
 			'<span class="pk_brand_name">mixota</span>' +
 			'<span class="pk_brand_attr">by growiota</span>';
 		brand.onclick = function () {
@@ -2366,14 +2364,17 @@
 		// change temp message, it's pretty ugly #### TODO
 		var ttmp = d.createElement('div');
 		ttmp.className = 'pk_tmpMsg pk_ed_empty';
-		ttmp.innerHTML = 'Drag n drop an Audio File in this window, or click ' +
+		ttmp.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;gap:10px;">' +
+		'<img src="mascot.png" style="width:52px;height:52px;border-radius:50%;box-shadow:0 0 20px rgba(0,229,160,0.35);border:1.5px solid #00E5A0;" alt="Mixo"/>' +
+		'<span>Drag and drop an audio file here, or click ' +
 		'<a style="white-space:nowrap;border:1px solid;border-radius:23px;padding:5px 18px;font-size:0.94em;margin-left:5px" '+
-		'onclick="PKAudioEditor.engine.LoadSample()">here to use a sample</a>';
+		'onclick="PKAudioEditor.engine.LoadSample()">here to use a sample</a></span></div>';
 		main_audio_view.appendChild( ttmp );
 
 		var ttmp2 = d.createElement('div');
 		ttmp2.className = 'pk_tmpMsg2';
-		ttmp2.innerHTML = '<span>Please Wait...</span><div class="pk_mload"><div></div></div>' + 
+		ttmp2.innerHTML = '<img src="mascot.png" style="width:40px;height:40px;border-radius:50%;margin-bottom:8px;box-shadow:0 0 16px rgba(0,229,160,0.4);border:1px solid #00E5A0;" alt="Mixo"/>' +
+			'<span>Processing Audio...</span><div class="pk_mload"><div></div></div>' + 
 			'<div class="pk_prc"><span>0%</span>' + 
 			'<button tabIndex="-1" class="pk_btn" '+
 			'onclick="PKAudioEditor.fireEvent(\'RequestCancelModal\');">cancel</button></div>';
@@ -2848,6 +2849,12 @@
 
 			UI.fireEvent ('RequestViewCenterToCursor');
 		}, [9]);
+
+		UI.KeyHandler.addCallback ('KeyHelpShortcuts', function ( key, map, e ) {
+			if (UI.InteractionHandler.on || (UI.KeyHandler && UI.KeyHandler.isEditTarget ( e ))) return ;
+			if (UI.openShortcutsModal) UI.openShortcutsModal ();
+			else if (w.PKAudioEditor && w.PKAudioEditor.openShortcutsModal) w.PKAudioEditor.openShortcutsModal ();
+		}, [16, 191]);
 
 		var is_chrome = !!window.chrome;
 		var timing = d.createElement( 'div' );
