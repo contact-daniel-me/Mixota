@@ -1589,10 +1589,9 @@
 		// Mixota Brand Wordmark with Mascot Avatar
 		var brand = d.createElement ( 'div' );
 		brand.className = 'pk_brand';
-		brand.title = 'Mixota — A product by growiota';
+		brand.title = 'Mixota';
 		brand.innerHTML = '<span class="pk_brand_mascot" style="width:22px;height:22px;border-radius:50%;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;border:1.5px solid #00E5A0;margin-right:8px;vertical-align:middle;box-shadow:0 0 10px rgba(0,229,160,0.35);"><img src="mascot.png" style="width:100%;height:100%;object-fit:cover;" alt="Mixo"/></span>' +
-			'<span class="pk_brand_name">mixota</span>' +
-			'<span class="pk_brand_attr">by growiota</span>';
+			'<span class="pk_brand_name">mixota</span>';
 		brand.onclick = function () {
 			window.open ('/about', '_blank');
 		};
