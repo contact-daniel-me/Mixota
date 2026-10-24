@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Mixota — About</title>
+	<meta charset="utf-8"/>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+	<meta name="description" content="Mixota is a browser-based audio editor for editing, trimming, and refining audio directly from your browser. A product by growiota."/>
+	<meta property="og:title" content="Mixota — About">
+	<meta property="og:description" content="Mixota is a browser-based audio editor for editing, trimming, and refining audio directly from your browser. A product by growiota.">
+	<meta name="keywords" content="mixota, growiota, audio editor, browser audio editor, WebAudio, WaveForm, sound editor, multitrack DAW">
+	<link href="/ico.png" rel="shortcut icon">
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+	:root {
+		--bg-main: #0A0B0A;
+		--bg-panel: #111312;
+		--bg-elevated: #181B19;
+		--text-primary: #F5F7F6;
+		--text-secondary: #A0A8A3;
+		--border: #292E2B;
+		--accent: #00E5A3;
+		--accent-glow: rgba(0, 229, 163, 0.25);
+	}
+
+	* {
+		box-sizing: border-box;
+	}
+
+	body {
+		padding: 0;
+		margin: 0;
+		font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+		color: var(--text-primary);
+		background: var(--bg-main);
+		line-height: 1.65;
+		-webkit-font-smoothing: antialiased;
+	}
+
+	#container {
+		width: 90%;
+		max-width: 920px;
+		margin: 0 auto;
+		padding: 40px 0 80px;
+	}
+
+	/* Brand Header */
+	.brand-hero {
+		padding: 24px 0 36px;
+		border-bottom: 1px solid var(--border);
+		margin-bottom: 36px;
+	}
+
+	.brand-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		padding: 4px 12px;
+		background: var(--bg-panel);
+		border: 1px solid var(--border);
+		border-radius: 20px;
+		font-size: 11px;
+		font-weight: 500;
+		color: var(--accent);
+		letter-spacing: 0.5px;
+		text-transform: uppercase;
+		margin-bottom: 16px;
+	}
+
+	.brand-title {
+		font-size: 38px;
+		font-weight: 700;
+		letter-spacing: -0.8px;
+		margin: 0 0 8px 0;
+		color: var(--text-primary);
+		display: flex;
+		align-items: center;
+		gap: 12px;
+	}
+
+	.brand-title span.wordmark {
+		color: var(--text-primary);
+	}
+
+	.brand-title span.accent-dot {
+		color: var(--accent);
+	}
+
+	.brand-attribution {
+		font-size: 14px;
+		color: var(--text-secondary);
+		margin: 0 0 16px 0;
+		font-weight: 400;
+	}
+
+	.brand-attribution strong {
+		color: var(--text-primary);
+	}
+
+	.tagline {
+		font-size: 19px;
+		font-weight: 400;
+		color: var(--accent);
+		margin-bottom: 20px;
+		letter-spacing: -0.2px;
+	}
+
+	.lead-text {
+		font-size: 16px;
+		color: var(--text-secondary);
+		max-width: 760px;
+		margin-bottom: 24px;
+	}
+
+	.back-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		padding: 9px 18px;
+		background: var(--accent);
+		color: #04140d;
+		font-weight: 600;
+		font-size: 13px;
+		border-radius: 6px;
+		text-decoration: none;
+		transition: all 0.2s ease;
+		box-shadow: 0 0 14px var(--accent-glow);
+	}
+
+	.back-btn:hover {
+		background: #34d399;
+		transform: translateY(-1px);
+	}
+
+	/* Content Styling */
+	h2 {
+		font-size: 22px;
+		font-weight: 600;
+		color: var(--text-primary);
+		margin: 44px 0 16px;
+		letter-spacing: -0.4px;
+	}
+
+	h3 {
+		font-size: 17px;
+		font-weight: 600;
+		color: var(--text-primary);
+		margin: 28px 0 10px;
+	}
+
+	p {
+		font-size: 14.5px;
+		color: var(--text-secondary);
+		margin-bottom: 16px;
+	}
+
+	ul {
+		margin: 0 0 24px 0;
+		padding-left: 20px;
+	}
+
+	li {
+		font-size: 14px;
+		color: var(--text-secondary);
+		margin-bottom: 8px;
+	}
+
+	li b, li strong {
+		color: var(--text-primary);
+	}
+
+	a {
+		color: var(--accent);
+		text-decoration: none;
+		transition: color 0.15s ease;
+	}
+
+	a:hover {
+		color: #5eead4;
+		text-decoration: underline;
+	}
+
+	.feature-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+		gap: 16px;
+		margin: 24px 0 36px;
+	}
+
+	.feature-card {
+		background: var(--bg-panel);
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		padding: 20px;
+		transition: border-color 0.2s;
+	}
+
+	.feature-card:hover {
+		border-color: rgba(0, 229, 163, 0.4);
+	}
+
+	.feature-card h4 {
+		margin: 0 0 8px;
+		font-size: 15px;
+		font-weight: 600;
+		color: var(--text-primary);
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.feature-card h4 span {
+		color: var(--accent);
+	}
+
+	.feature-card p {
+		margin: 0;
+		font-size: 13px;
+		line-height: 1.55;
+	}
+
+	.code-chip {
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 12px;
+		background: var(--bg-elevated);
+		border: 1px solid var(--border);
+		padding: 2px 6px;
+		border-radius: 4px;
+		color: var(--accent);
+	}
+
+	hr {
+		border: none;
+		border-top: 1px solid var(--border);
+		margin: 44px 0;
+	}
+
+	.license-box {
+		background: var(--bg-panel);
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		padding: 24px;
+		margin-top: 20px;
+	}
+
+	.license-box p {
+		margin-bottom: 12px;
+	}
+
+	.legal-copy {
+		font-size: 12px;
+		color: #6E7771;
+		font-family: 'JetBrains Mono', monospace;
+		line-height: 1.5;
+	}
+
+	::selection {
+		background: var(--accent);
+		color: #04140d;
+	}
+</style>
+</head>
+<body>
+
+<div id="container">
+
+	<!-- Hero Header -->
+	<header class="brand-hero">
+		<div class="brand-badge">✦ Professional Web Audio</div>
+		<h1 class="brand-title">
+			<span class="wordmark">mixota</span><span class="accent-dot">.</span>
+		</h1>
+		<div class="brand-attribution">A product by <strong>growiota</strong></div>
+		<div class="tagline">Your sound. Your creativity.</div>
+		<p class="lead-text">
+			Mixota is an independent, high-performance browser-based audio and waveform editor. Designed for creators, podcasters, and sound designers who need rapid, precise audio processing with zero installation and absolute privacy.
+		</p>
+		<a href="/" class="back-btn">← Launch Mixota Editor</a>
+	</header>
+
+	<!-- Capabilities Grid -->
+	<section>
+		<h2>Core Capabilities</h2>
+		<div class="feature-grid">
+			<div class="feature-card">
+				<h4><span>01.</span> Precision Waveform Editing</h4>
+				<p>Sample-accurate zooming, panning, region selection, cutting, trimming, zero-crossing snapping, and non-destructive undo/redo history.</p>
+			</div>
+			<div class="feature-card">
+				<h4><span>02.</span> Multitrack Mixing</h4>
+				<p>Multi-channel arrangement with clip positioning, crossfading, channel gain, panning, mute/solo buses, and bounce mixdown.</p>
+			</div>
+			<div class="feature-card">
+				<h4><span>03.</span> Studio-Grade DSP Effects</h4>
+				<p>Dynamic compression, parametric & graphic EQ, convolution reverb, stereo delay, normalization, pitch shifting, and graph-based speed profiles.</p>
+			</div>
+			<div class="feature-card">
+				<h4><span>04.</span> Audio Repair & Enhancement</h4>
+				<p>RNNoise AI neural noise reduction, click removal, 50/60 Hz mains hum removal, and smooth edit-point reconstruction.</p>
+			</div>
+			<div class="feature-card">
+				<h4><span>05.</span> Beat & Tempo Tools</h4>
+				<p>Automated tempo estimation, metronome beat grids (4/4, 3/4, 6/8), beat-synchronized snapping, and seamless loop creation.</p>
+			</div>
+			<div class="feature-card">
+				<h4><span>06.</span> Universal Codec Support</h4>
+				<p>Import and export across MP3, WAV, FLAC, OGG, WebM, and custom session formats with ID3 tag editing and offline caching.</p>
+			</div>
+		</div>
+	</section>
+
+	<hr />
+
+	<!-- Architecture & Privacy -->
+	<section>
+		<h2>Engine & Privacy Architecture</h2>
+		<p>
+			Mixota runs 100% locally on your machine utilizing modern Web Audio APIs, WebAssembly (Wasm), and Web Workers.
+		</p>
+		<ul>
+			<li><strong>Zero Cloud Uploads:</strong> Audio files are decoded and processed in browser memory. No audio is ever transmitted to an external server.</li>
+			<li><strong>Lightweight Footprint:</strong> Highly optimized vanilla JavaScript runtime under 100kb compressed, avoiding heavy framework overhead.</li>
+			<li><strong>Offline Ready:</strong> Fully operational without an active internet connection after initial load via Service Worker and application caching.</li>
+		</ul>
+	</section>
+
+	<hr />
+
+	<!-- Keyboard Shortcuts -->
+	<section>
+		<h2>Essential Keyboard Shortcuts</h2>
+		<p>Mixota is optimized for rapid workflows using standard keyboard shortcuts:</p>
+		<ul>
+			<li><span class="code-chip">Space</span> — Play / Pause playback</li>
+			<li><span class="code-chip">Shift + Z</span> — Undo last operation</li>
+			<li><span class="code-chip">Shift + Y</span> — Redo operation</li>
+			<li><span class="code-chip">Shift + X</span> — Cut selected region</li>
+			<li><span class="code-chip">Shift + C</span> — Copy selected region</li>
+			<li><span class="code-chip">Shift + V</span> — Paste from clipboard</li>
+			<li><span class="code-chip">Shift + K</span> — Trim to selection</li>
+			<li><span class="code-chip">Shift + A</span> — Select entire waveform</li>
+			<li><span class="code-chip">Delete / Backspace</span> — Delete selection</li>
+			<li><span class="code-chip">Shift + L</span> — Toggle loop playback</li>
+		</ul>
+	</section>
+
+	<hr />
+
+	<!-- Open Source Acknowledgements & License -->
+	<section>
+		<h2 id="license">License &amp; Acknowledgements</h2>
+		<div class="license-box">
+			<p>
+				<strong>Mixota</strong> is a product developed and maintained by <strong>growiota</strong>.
+			</p>
+			<p>
+				Mixota is built upon the open-source <a href="https://github.com/pkalogiros/audiomass" target="_blank">AudioMass</a> project created by Pantelis Kalogiros, which is licensed under the MIT License. We gratefully acknowledge and honor this foundation.
+			</p>
+			<p>
+				Bundled third-party libraries retain their original open-source licenses:
+			</p>
+			<ul>
+				<li><strong>WaveSurfer.js:</strong> BSD-3-Clause</li>
+				<li><strong>lamejs / LAME MP3 encoder:</strong> LGPL</li>
+				<li><strong>libFLAC:</strong> Xiph / New BSD</li>
+				<li><strong>RNNoise:</strong> BSD-3-Clause</li>
+				<li><strong>lz4-wasm:</strong> BSD-2-Clause</li>
+			</ul>
+			<p class="legal-copy">
+				Original AudioMass code &copy; 2018-present Pantelis Kalogiros, MIT License.<br />
+				Mixota branding and product configuration &copy; growiota.
+			</p>
+		</div>
+	</section>
+
+	<div style="margin-top: 48px; text-align: center;">
+		<a href="/" class="back-btn">Open Mixota Editor</a>
+	</div>
+
+</div>
+
+</body>
+</html>

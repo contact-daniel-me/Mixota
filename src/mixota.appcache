@@ -1,0 +1,34 @@
+CACHE MANIFEST
+# Mixota v1.0 - Offline Application Cache
+
+/index-cache.html
+/manifest.json
+/ico.png
+/icon.png
+/main.css
+/main.build.css
+/recorder-worklet.js
+/tempo-estimator.js
+/tempo-worker.js
+/wav.js
+/lame.js
+/flac.js
+/libflac.js
+/libflac.wasm
+/lz4-block-codec-wasm.js
+/lz4-block-codec.wasm
+/rnn_denoise.js
+/rnn_denoise.wasm
+/fonts/icomoon.ttf
+/fonts/icomoon.woff
+/eq.html
+/sp.html
+/mix.html
+/test.mp3
+
+NETWORK:
+/index-cache.html
+
+# Fallback content
+FALLBACK:
+. /index-cache.html

@@ -1,0 +1,22 @@
+{
+  "name": "Mixota — Online Audio Editor",
+  "short_name": "mixota",
+  "description": "Mixota is a browser-based audio editor for editing, trimming, and refining audio directly from your browser. A product by growiota.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#0A0B0A",
+  "theme_color": "#00E5A3",
+  "icons": [
+    {
+      "src": "icon.png",
+      "type": "image/png",
+      "sizes": "144x144"
+    },
+    {
+      "src": "ico.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "name": "mixota",
+  "version": "1.0.0",
+  "description": "Mixota is a browser-based audio editor for editing, trimming, and refining audio directly from your browser. A product by growiota.",
+  "main": "src/index.html",
+  "scripts": {
+    "start": "python src/server.py",
+    "serve": "python src/server.py",
+    "build": "node build.js"
+  },
+  "keywords": [
+    "mixota",
+    "audio-editor",
+    "growiota",
+    "webaudio",
+    "waveform",
+    "sound-editor",
+    "daw"
+  ],
+  "author": "growiota",
+  "license": "MIT",
+  "homepage": "http://localhost:5055/"
+}
