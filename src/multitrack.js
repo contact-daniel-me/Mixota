@@ -710,6 +710,11 @@
 			var actions = app.el.getElementsByClassName ('pk_hdr')[0];
 			if (!actions) return ;
 
+			var existing = actions.getElementsByClassName ('pk_mt_topbtn');
+			while (existing.length > 0) {
+				existing[0].parentNode.removeChild ( existing[0] );
+			}
+
 			btn_toggle = d.createElement ('button');
 			btn_toggle.setAttribute ('tabIndex', -1);
 			btn_toggle.className = 'pk_mt_topbtn';
@@ -718,8 +723,35 @@
 				Toggle ();
 				this.blur ();
 			};
-			actions.appendChild ( btn_toggle );
 
+			// Find Help menu element among direct children of pk_hdr
+			var help_btn = null;
+			for (var i = 0; i < actions.children.length; ++i) {
+				var ch = actions.children[i];
+				var txt = (ch.innerText || ch.textContent || '').trim().toLowerCase();
+				if (txt.indexOf('help') === 0 || txt === 'help') {
+					help_btn = ch;
+					break;
+				}
+			}
+
+			if (help_btn) {
+				actions.insertBefore ( btn_toggle, help_btn );
+			} else {
+				var buttons = actions.getElementsByClassName ('pk_btn');
+				for (var j = 0; j < buttons.length; ++j) {
+					var b = buttons[j].getElementsByTagName ('button')[0];
+					if (b && (b.innerText || b.textContent || '').trim().toLowerCase() === 'help') {
+						help_btn = buttons[j];
+						break;
+					}
+				}
+				if (help_btn && help_btn.parentNode === actions) {
+					actions.insertBefore ( btn_toggle, help_btn );
+				} else {
+					actions.appendChild ( btn_toggle );
+				}
+			}
 		}
 
 		function attachBeatToolbar () {

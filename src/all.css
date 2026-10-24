@@ -752,8 +752,10 @@ a{
 
 /* "Switch to multitrack" button */
 .pk_mt_topbtn{
-	margin-left:auto;margin-right:6px;
+	margin:0 14px;
 	height:20px;padding:0 12px;
+	display:inline-flex;align-items:center;
+	vertical-align:middle;flex-shrink:0;
 	background:linear-gradient(180deg,var(--bg-3) 0%,var(--bg-1) 100%);
 	color:var(--fg-0);
 	border:1px solid var(--bd);border-radius:10px;
@@ -1735,13 +1737,23 @@ input,textarea{-webkit-touch-callout:none}
 .pk_brand_icon svg{width:100%;height:100%}
 .pk_brand_name{font-family:'Inter',system-ui,sans-serif;font-weight:700;font-size:13.5px;letter-spacing:-.4px;color:var(--fg-0);line-height:1}
 .pk_brand_attr{font-family:'Inter',system-ui,sans-serif;font-weight:400;font-size:9.5px;color:var(--fg-1);letter-spacing:.2px;margin-left:2px;padding-left:6px;border-left:1px solid var(--bd);line-height:1}
-@media only screen and (max-width: 600px){
-	.pk_hdr .pk_btn{margin:0 8px;min-width:36px}
-	.pk_hdr .pk_btn:first-child,.pk_hdr .pk_btn:first-of-type{margin-left:0}
+@media only screen and (max-width: 768px){
+	.pk_hdr .pk_btn{margin:0 10px;min-width:38px}
+	.pk_mt_topbtn{margin:0 10px;padding:0 9px}
 }
-@media only screen and (max-width: 520px){.pk_brand_attr{display:none}}
-@media only screen and (max-width: 420px){
+@media only screen and (max-width: 620px){
+	.pk_hdr .pk_btn{margin:0 7px;min-width:32px}
+	.pk_hdr .pk_btn:first-child,.pk_hdr .pk_btn:first-of-type{margin-left:0}
+	.pk_mt_topbtn{margin:0 7px;padding:0 7px;font-size:10px}
+	.pk_mt_topbtn em{margin-left:4px;padding:1px 3px 0}
+}
+@media only screen and (max-width: 520px){
+	.pk_brand_attr{display:none}
+	.pk_mt_topbtn em{display:none}
+}
+@media only screen and (max-width: 440px){
 	.pk_hdr{padding:0 4px}
 	.pk_hdr .pk_btn{margin:0 4px;min-width:auto}
-	.pk_hdr .pk_btn>button{padding:3px 3px;font-size:11.5px}
+	.pk_hdr .pk_btn>button{padding:3px 2px;font-size:11px}
+	.pk_mt_topbtn{margin:0 4px;padding:0 5px;font-size:9.5px}
 }
