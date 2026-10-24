@@ -19,5 +19,8 @@
   ],
   "author": "growiota",
   "license": "MIT",
-  "homepage": "http://localhost:5055/"
+  "homepage": "http://localhost:5055/",
+  "devDependencies": {
+    "uglify-js": "^3.19.3"
+  }
 }
