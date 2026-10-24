@@ -391,13 +391,14 @@ body {
 	margin-bottom: 38px;
 }
 
-.btn-primary-hero {
+.btn-primary-hero,
+.btn-primary-hero * {
 	display: inline-flex;
 	align-items: center;
 	gap: 10px;
 	padding: 14px 28px;
 	background: var(--mint);
-	color: #04140C;
+	color: #04140C !important;
 	font-size: 15px;
 	font-weight: 700;
 	text-decoration: none;
@@ -406,8 +407,16 @@ body {
 	transition: all var(--transition);
 }
 
-.btn-primary-hero:hover {
+.btn-primary-hero * {
+	padding: 0 !important;
+	background: transparent !important;
+	box-shadow: none !important;
+}
+
+.btn-primary-hero:hover,
+.btn-primary-hero:hover * {
 	background: var(--mint-bright);
+	color: #020B07 !important;
 	box-shadow: 0 0 40px var(--mint-glow), 0 6px 20px rgba(0, 229, 160, 0.5);
 	transform: translateY(-2px);
 }
@@ -1196,12 +1205,23 @@ body {
 	margin-bottom: 12px;
 }
 
-.license-box a {
+.license-box a:not(.btn-primary-hero) {
 	color: var(--mint);
 	text-decoration: none;
 }
-.license-box a:hover {
+.license-box a:not(.btn-primary-hero):hover {
 	text-decoration: underline;
+}
+
+.license-box .btn-primary-hero,
+.license-box .btn-primary-hero * {
+	color: #04140C !important;
+	text-decoration: none !important;
+}
+
+.license-box .btn-primary-hero:hover {
+	color: #020B07 !important;
+	text-decoration: none !important;
 }
 
 /* ==========================================================================
@@ -1935,8 +1955,8 @@ body {
 				Bundled third-party libraries retain their original licenses: <strong>WaveSurfer.js</strong> (BSD-3-Clause), <strong>lamejs</strong> (LGPL), <strong>libFLAC</strong> (Xiph / New BSD), <strong>RNNoise</strong> (BSD-3-Clause), <strong>lz4-wasm</strong> (BSD-2-Clause).
 			</p>
 			<div style="margin-top:20px;text-align:center;">
-				<a href="/" class="btn-primary-hero" style="padding:12px 28px;font-size:14px;">
-					<span>← Enter Live Studio</span>
+				<a href="/" class="btn-primary-hero" style="padding:12px 28px;font-size:14px;color:#04140C !important;">
+					<span style="color:#04140C !important;font-weight:700;">← Enter Live Studio</span>
 				</a>
 			</div>
 		</div>
