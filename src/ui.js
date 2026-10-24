@@ -1598,7 +1598,6 @@
 		brand.onclick = function () {
 			window.open ('/about.html', '_blank');
 		};
-		header.appendChild ( brand );
 
 		var _name = 'TopHeader',
 			_default_class = 'pk_btn pk_noselect';
@@ -1668,6 +1667,7 @@
 			}
 		};
 		build_menus ( header, menu_tree, 0 );
+		header.appendChild ( brand );
 		
 		this.getOpenElement = function () {
 			return target_el;

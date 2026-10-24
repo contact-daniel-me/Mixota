@@ -125,13 +125,18 @@ a{
 	background:var(--bg-1);
 	border-bottom:1px solid var(--bd);
 	display:flex;align-items:center;
+	justify-content:flex-start;
 }
 
 .pk_hdr .pk_btn{
 	float:none;position:relative;
-	margin:0 16px;min-width:42px;
+	margin:0 14px;min-width:42px;
 	border-radius:var(--r);text-align:center;
 	transition:background var(--tr),color var(--tr);
+}
+.pk_hdr .pk_btn:first-child,
+.pk_hdr .pk_btn:first-of-type{
+	margin-left:0;
 }
 .pk_btn button{
 	padding:3px var(--s2);
@@ -1715,10 +1720,28 @@ input,textarea{-webkit-touch-callout:none}
 
 
 /* Mixota brand header badge */
-.pk_brand{display:inline-flex;align-items:center;gap:7px;padding:0 12px 0 6px;margin-right:8px;height:100%;text-decoration:none;cursor:pointer;user-select:none;border-right:1px solid var(--bd);transition:opacity var(--tr)}
+.pk_brand{
+	display:inline-flex;align-items:center;gap:7px;
+	padding:0 4px 0 12px;
+	margin-left:auto;margin-right:0;
+	height:100%;text-decoration:none;cursor:pointer;user-select:none;
+	border-left:1px solid var(--bd);border-right:none;
+	transition:opacity var(--tr);
+	flex-shrink:0;
+	order:99;
+}
 .pk_brand:hover{opacity:.85}
 .pk_brand_icon{width:16px;height:16px;display:flex;align-items:center;justify-content:center}
 .pk_brand_icon svg{width:100%;height:100%}
 .pk_brand_name{font-family:'Inter',system-ui,sans-serif;font-weight:700;font-size:13.5px;letter-spacing:-.4px;color:var(--fg-0);line-height:1}
 .pk_brand_attr{font-family:'Inter',system-ui,sans-serif;font-weight:400;font-size:9.5px;color:var(--fg-1);letter-spacing:.2px;margin-left:2px;padding-left:6px;border-left:1px solid var(--bd);line-height:1}
+@media only screen and (max-width: 600px){
+	.pk_hdr .pk_btn{margin:0 8px;min-width:36px}
+	.pk_hdr .pk_btn:first-child,.pk_hdr .pk_btn:first-of-type{margin-left:0}
+}
 @media only screen and (max-width: 520px){.pk_brand_attr{display:none}}
+@media only screen and (max-width: 420px){
+	.pk_hdr{padding:0 4px}
+	.pk_hdr .pk_btn{margin:0 4px;min-width:auto}
+	.pk_hdr .pk_btn>button{padding:3px 3px;font-size:11.5px}
+}
