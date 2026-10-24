@@ -243,104 +243,24 @@
 	//top bar config list
 	function _topbarConfig ( app, ui ) {
 		function openShortcutsModal () {
-			var isMac = /mac|iphone|ipad|ipod/.test ((navigator.platform || '').toLowerCase ());
-			var modKey = isMac ? 'Cmd' : 'Ctrl';
+			if (PKAudioEditor && PKAudioEditor.ShortcutManager && PKAudioEditor.ShortcutManager.openHelpModal) {
+				PKAudioEditor.ShortcutManager.openHelpModal ();
+			}
+		}
 
-			var shortcutRow = function ( desc, keys ) {
-				return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#111312;border:1px solid #202422;border-radius:4px;">' +
-					'<span style="color:#A0A8A3;font-size:12px;font-family:Inter,system-ui,sans-serif;">' + desc + '</span>' +
-					'<span style="background:#181B19;border:1px solid #292E2B;color:#00E5A3;font-family:\'JetBrains Mono\',monospace;font-size:11px;font-weight:600;padding:2px 7px;border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.06);white-space:nowrap;margin-left:12px;">' + keys + '</span>' +
-				'</div>';
-			};
-
-			var sectionHeader = function ( icon, title ) {
-				return '<div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#00E5A3;margin:14px 0 8px 0;display:flex;align-items:center;gap:6px;font-family:Inter,system-ui,sans-serif;">' +
-					'<span>' + icon + '</span> ' + title +
-				'</div>';
-			};
-
-			var bodyHtml = '<div style="max-width:620px;width:calc(100vw - 44px);max-height:calc(100vh - 280px);overflow-y:auto;overflow-x:hidden;padding-right:4px;-webkit-overflow-scrolling:touch;box-sizing:border-box;">' +
-				'<div style="color:#A0A8A3;font-size:12px;margin-bottom:12px;line-height:1.5;">Quick keyboard reference for common playback, editing, navigation, and multitrack commands.</div>' +
-
-				sectionHeader ('▶', 'Playback &amp; Transport') +
-				'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:6px;">' +
-					shortcutRow ('Play / Stop', 'Space') +
-					shortcutRow ('Pause Playback', 'Shift + Space') +
-					shortcutRow ('Toggle Loop Playback', 'L') +
-					shortcutRow ('Record (Toggle)', 'R') +
-					shortcutRow ('Skip Backward / Forward', '← / →') +
-					shortcutRow ('Seek Region / Track Edge', 'Shift + ← / →') +
-					shortcutRow ('Center to Playhead', 'Tab') +
-				'</div>' +
-
-				sectionHeader ('✂', 'Editing &amp; Clipboard') +
-				'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:6px;">' +
-					shortcutRow ('Undo', modKey + ' + Z / Shift + Z') +
-					shortcutRow ('Redo', modKey + ' + Y / Shift + Y') +
-					shortcutRow ('Cut Selection', modKey + ' + X / Shift + X') +
-					shortcutRow ('Copy Selection', modKey + ' + C / Shift + C') +
-					shortcutRow ('Paste Clipboard', modKey + ' + V / Shift + V') +
-					shortcutRow ('Delete Selection', 'Del / Backspace') +
-					shortcutRow ('Trim to Selection', 'Shift + K') +
-					shortcutRow ('Insert Silence', 'Shift + N') +
-					shortcutRow ('Crossfade Clips (Multitrack)', 'X') +
-				'</div>' +
-
-				sectionHeader ('🔍', 'Selection, Zoom &amp; Markers') +
-				'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:6px;">' +
-					shortcutRow ('Select All', modKey + ' + A / Shift + A') +
-					shortcutRow ('Deselect All', '~ (Tilde)') +
-					shortcutRow ('Clear Selection', 'Q') +
-					shortcutRow ('Reset Zoom', '0') +
-					shortcutRow ('Zoom In / Out', '+ / -') +
-					shortcutRow ('Add Marker', 'M') +
-					shortcutRow ('Previous / Next Marker', '[ / ]') +
-					shortcutRow ('Track Up / Down', '↑ / ↓') +
-					shortcutRow ('Export / Download', modKey + ' + S / Shift + S') +
-					shortcutRow ('Keyboard Shortcuts Help', '?') +
-				'</div>' +
-			'</div>';
-
-			var modal = new PKSimpleModal ({
-				title: '<div style="display:flex;align-items:center;gap:8px;"><span style="color:#00E5A3;font-size:15px;">⌨</span><span style="font-size:14px;font-family:Inter,system-ui,sans-serif;font-weight:600;color:#F5F7F6;">Keyboard Shortcuts</span><span style="font-size:11px;color:#A0A8A3;margin-left:auto;">Mixota Reference</span></div>',
-				clss: 'pk_bigger',
-				ondestroy: function ( q ) {
-					app.ui.InteractionHandler.on = false;
-					app.ui.KeyHandler.removeCallback ('modalTempShortcuts');
-				},
-				body: bodyHtml,
-				setup: function ( q ) {
-					app.ui.InteractionHandler.checkAndSet ('modal');
-					app.ui.KeyHandler.addCallback ('modalTempShortcuts', function ( e ) {
-						q.Destroy ();
-					}, [27]);
-				}
-			});
-
-			modal.Show ();
-
-			var cancelBtn = modal.el.querySelector ('.pk_modal_cancel');
-			if (cancelBtn) {
-				cancelBtn.innerHTML = '&nbsp; Close &nbsp;';
-				cancelBtn.style.cssText = 'border-color:var(--bd);color:var(--fg-0);background:var(--bg-3);transition:all var(--tr);';
-				cancelBtn.onmouseenter = function() {
-					this.style.borderColor = 'var(--ac)';
-					this.style.color = 'var(--ac)';
-					this.style.boxShadow = '0 0 8px var(--ac-glow)';
-				};
-				cancelBtn.onmouseleave = function() {
-					this.style.borderColor = 'var(--bd)';
-					this.style.color = 'var(--fg-0)';
-					this.style.boxShadow = 'none';
-				};
+		function openSettingsModal ( initialCategory ) {
+			if (PKAudioEditor && PKAudioEditor.ShortcutManager && PKAudioEditor.ShortcutManager.openSettingsModal) {
+				PKAudioEditor.ShortcutManager.openSettingsModal ( initialCategory );
 			}
 		}
 
 		if (app && app.ui) {
 			app.ui.openShortcutsModal = openShortcutsModal;
+			app.ui.openSettingsModal  = openSettingsModal;
 		}
 		if (w.PKAudioEditor) {
 			w.PKAudioEditor.openShortcutsModal = openShortcutsModal;
+			w.PKAudioEditor.openSettingsModal  = openSettingsModal;
 		}
 
 		return [
@@ -1145,6 +1065,15 @@
 							});
 							// ---
 						}
+					},
+					{
+						name: '---'
+					},
+					{
+						name: 'Keyboard Shortcuts...',
+						action: function () {
+							openSettingsModal ('shortcuts');
+						}
 					}
 				]
 			},
@@ -1256,6 +1185,15 @@
 							function set ( val ) { obj.innerHTML = txt + (val ? ' &#10004;' : ''); }
 							set (!w.localStorage || w.localStorage.pk_snapzc !== '0');
 							app.listenFor ('DidSnapSelDrag', set);
+						}
+					},
+					{
+						name: '---'
+					},
+					{
+						name: 'Keyboard Shortcuts...',
+						action: function () {
+							openSettingsModal ('shortcuts');
 						}
 					}
 					]
@@ -1558,9 +1496,15 @@
 				name:'Help',
 				children:[
 					{
-						name   : 'Shortcuts <span class="pk_shrtct">[?]</span>',
+						name   : 'Shortcuts Reference <span class="pk_shrtct">[?]</span>',
 						action : function () {
 							openShortcutsModal ();
+						}
+					},
+					{
+						name   : 'Keyboard Shortcuts Settings...',
+						action : function () {
+							openSettingsModal ('shortcuts');
 						}
 					},
 
@@ -1664,6 +1608,36 @@
 			}
 		};
 		build_menus ( header, menu_tree, 0 );
+
+		var shortcutsBtn = d.createElement ( 'button' );
+		shortcutsBtn.className = 'pk_hdr_shortcuts_btn';
+		shortcutsBtn.setAttribute ( 'tabindex', '-1' );
+		shortcutsBtn.title = 'Keyboard Shortcuts & Settings (?)';
+		shortcutsBtn.innerHTML = '<span style="color:#00E5A3;font-size:12px;margin-right:4px;">⌨</span>Shortcuts';
+		shortcutsBtn.onclick = function () {
+			if (w.PKAudioEditor && w.PKAudioEditor.openSettingsModal) {
+				w.PKAudioEditor.openSettingsModal ('shortcuts');
+			}
+		};
+
+		var mt_btn = header.querySelector ( '.pk_mt_topbtn' );
+		var help_btn = null;
+		for (var i = 0; i < header.children.length; ++i) {
+			var ch = header.children[i];
+			var txt = (ch.innerText || ch.textContent || '').trim().toLowerCase();
+			if (txt.indexOf('help') === 0 || txt === 'help') {
+				help_btn = ch;
+				break;
+			}
+		}
+
+		if (mt_btn) {
+			header.insertBefore ( shortcutsBtn, mt_btn );
+		} else if (help_btn) {
+			header.insertBefore ( shortcutsBtn, help_btn );
+		} else {
+			header.appendChild ( shortcutsBtn );
+		}
 		header.appendChild ( brand );
 		
 		this.getOpenElement = function () {
@@ -2851,8 +2825,9 @@
 
 		UI.KeyHandler.addCallback ('KeyHelpShortcuts', function ( key, map, e ) {
 			if (UI.InteractionHandler.on || (UI.KeyHandler && UI.KeyHandler.isEditTarget ( e ))) return ;
-			if (UI.openShortcutsModal) UI.openShortcutsModal ();
-			else if (w.PKAudioEditor && w.PKAudioEditor.openShortcutsModal) w.PKAudioEditor.openShortcutsModal ();
+			if (UI.openSettingsModal) UI.openSettingsModal ('shortcuts');
+			else if (UI.openShortcutsModal) UI.openShortcutsModal ();
+			else if (w.PKAudioEditor && w.PKAudioEditor.openSettingsModal) w.PKAudioEditor.openSettingsModal ('shortcuts');
 		}, [16, 191]);
 
 		var is_chrome = !!window.chrome;
