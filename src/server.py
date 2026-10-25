@@ -1,4 +1,4 @@
-import os
+﻿import os
 import http.server
 import urllib.parse
 
@@ -9,10 +9,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=DIRECTORY, **kwargs)
 
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.end_headers()
+
     def do_GET(self):
         parsed = urllib.parse.urlsplit(self.path)
         path = parsed.path
         query = ('?' + parsed.query) if parsed.query else ''
+
+        # Route /editor and /multitrack to /index.html (the editor)
+        if path.rstrip('/') in ('/editor', '/multitrack'):
+            self.path = '/index.html' + query
+            return super().do_GET()
 
         # 1. Permanent redirect for /index.html and /index to /
         if path in ('/index.html', '/index'):
@@ -51,6 +60,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
         self.send_header('Pragma', 'no-cache')
         self.send_header('Expires', '0')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE')
+        self.send_header('Access-Control-Allow-Headers', '*')
         super().end_headers()
 
 if __name__ == '__main__':

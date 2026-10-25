@@ -1,0 +1,324 @@
+﻿/* VIT Community Radio CMS Integration Bar & Modals */
+.mixota-cms-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(90deg, #0d1612 0%, #101c18 50%, #0d1612 100%);
+  border-bottom: 1px solid #1c382b;
+  color: #e5f5ec;
+  padding: 6px 14px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 12px;
+  position: relative;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.mixota-cms-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mixota-cms-badge {
+  background: rgba(0, 229, 163, 0.15);
+  color: #00e5a3;
+  border: 1px solid rgba(0, 229, 163, 0.4);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mixota-cms-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mixota-cms-title {
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.mixota-cms-filename {
+  color: #7da593;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+}
+
+.mixota-cms-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #9ebdb0;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.mixota-cms-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #00e5a3;
+  box-shadow: 0 0 6px #00e5a3;
+}
+
+.mixota-cms-status-dot.loading {
+  background: #f59e0b;
+  box-shadow: 0 0 6px #f59e0b;
+  animation: pulse-dot 1s infinite;
+}
+
+.mixota-cms-status-dot.error {
+  background: #ef4444;
+  box-shadow: 0 0 6px #ef4444;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.mixota-cms-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mixota-cms-btn {
+  background: #14241e;
+  color: #e5f5ec;
+  border: 1px solid #234837;
+  padding: 5px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  text-decoration: none;
+}
+
+.mixota-cms-btn:hover {
+  background: #1c332b;
+  border-color: #00e5a3;
+  color: #ffffff;
+}
+
+.mixota-cms-btn-primary {
+  background: #00e5a3;
+  color: #05140d;
+  border-color: #00e5a3;
+  font-weight: 600;
+}
+
+.mixota-cms-btn-primary:hover {
+  background: #00ffb7;
+  border-color: #00ffb7;
+  box-shadow: 0 0 12px rgba(0, 229, 163, 0.4);
+}
+
+.mixota-cms-btn-outline {
+  background: transparent;
+  border: 1px solid #2b5240;
+  color: #b8ded0;
+}
+
+.mixota-cms-btn-outline:hover {
+  background: rgba(0, 229, 163, 0.1);
+  border-color: #00e5a3;
+  color: #ffffff;
+}
+
+/* Modals */
+.mixota-cms-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 10, 8, 0.75);
+  backdrop-filter: blur(4px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.mixota-cms-modal {
+  background: #111a15;
+  border: 1px solid #234837;
+  border-radius: 8px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7), 0 0 15px rgba(0, 229, 163, 0.15);
+  width: 100%;
+  max-width: 480px;
+  color: #e5f5ec;
+  overflow: hidden;
+  animation: mixotaModalIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes mixotaModalIn {
+  from { opacity: 0; transform: scale(0.96) translateY(-8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.mixota-cms-modal-head {
+  padding: 14px 18px;
+  background: #0d1612;
+  border-bottom: 1px solid #1c382b;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mixota-cms-modal-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mixota-cms-modal-close {
+  background: transparent;
+  border: none;
+  color: #7da593;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.mixota-cms-modal-close:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.mixota-cms-modal-body {
+  padding: 18px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #c4ded2;
+}
+
+.mixota-cms-modal-body p {
+  margin: 0 0 12px;
+}
+
+.mixota-cms-field {
+  margin-bottom: 14px;
+}
+
+.mixota-cms-field label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  color: #8fb8a7;
+  margin-bottom: 5px;
+}
+
+.mixota-cms-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: #080f0c;
+  border: 1px solid #234837;
+  border-radius: 4px;
+  padding: 8px 10px;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.mixota-cms-input:focus {
+  outline: none;
+  border-color: #00e5a3;
+  box-shadow: 0 0 8px rgba(0, 229, 163, 0.3);
+}
+
+.mixota-cms-options {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.mixota-cms-opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.mixota-cms-alert {
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.mixota-cms-alert-info {
+  background: rgba(0, 229, 163, 0.1);
+  border: 1px solid rgba(0, 229, 163, 0.3);
+  color: #a3e9cb;
+}
+
+.mixota-cms-alert-warning {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #fde68a;
+}
+
+.mixota-cms-alert-error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+}
+
+.mixota-cms-alert-success {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #a7f3d0;
+}
+
+.mixota-cms-modal-foot {
+  padding: 12px 18px;
+  background: #0d1612;
+  border-top: 1px solid #1c382b;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Progress bar */
+.mixota-cms-progress-wrap {
+  width: 100%;
+  background: #080f0c;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 10px 0;
+  border: 1px solid #1c382b;
+}
+
+.mixota-cms-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #00b380, #00e5a3);
+  width: 0%;
+  transition: width 0.2s ease;
+  box-shadow: 0 0 8px #00e5a3;
+}

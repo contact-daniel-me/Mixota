@@ -1,4 +1,4 @@
-const fs = require('fs');
+﻿const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
@@ -28,7 +28,8 @@ const bundleFiles = [
   'local.js',
   'id3.js',
   'lzma.js',
-  'mixota-format.js'
+  'mixota-format.js',
+  'mixota-cms.js'
 ];
 
 console.log('Building Mixota production bundle...');
@@ -69,3 +70,4 @@ if (fs.existsSync(cssSource)) {
 }
 
 console.log('Mixota build complete!');
+

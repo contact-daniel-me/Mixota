@@ -1,57 +1,65 @@
 {
-  "outputDirectory": "src",
-  "cleanUrls": true,
-  "trailingSlash": false,
-  "redirects": [
-    {
-      "source": "/index.html",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/index",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/home.html",
-      "destination": "/about",
-      "permanent": true
-    },
-    {
-      "source": "/home",
-      "destination": "/about",
-      "permanent": true
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/about",
-      "destination": "/about.html"
-    },
-    {
-      "source": "/features",
-      "destination": "/features.html"
-    },
-    {
-      "source": "/workflow",
-      "destination": "/workflow.html"
-    },
-    {
-      "source": "/contact",
-      "destination": "/contact.html"
-    },
-    {
-      "source": "/eq",
-      "destination": "/eq.html"
-    },
-    {
-      "source": "/sp",
-      "destination": "/sp.html"
-    },
-    {
-      "source": "/mix",
-      "destination": "/mix.html"
-    }
-  ]
+    "outputDirectory":  "src",
+    "cleanUrls":  true,
+    "trailingSlash":  false,
+    "redirects":  [
+                      {
+                          "source":  "/index.html",
+                          "destination":  "/",
+                          "permanent":  true
+                      },
+                      {
+                          "source":  "/index",
+                          "destination":  "/",
+                          "permanent":  true
+                      },
+                      {
+                          "source":  "/home.html",
+                          "destination":  "/about",
+                          "permanent":  true
+                      },
+                      {
+                          "source":  "/home",
+                          "destination":  "/about",
+                          "permanent":  true
+                      }
+                  ],
+    "rewrites":  [
+                     {
+                         "source":  "/editor",
+                         "destination":  "/index.html"
+                     },
+                     {
+                         "source":  "/multitrack",
+                         "destination":  "/index.html"
+                     },
+                     {
+                         "source":  "/about",
+                         "destination":  "/about.html"
+                     },
+                     {
+                         "source":  "/features",
+                         "destination":  "/features.html"
+                     },
+                     {
+                         "source":  "/workflow",
+                         "destination":  "/workflow.html"
+                     },
+                     {
+                         "source":  "/contact",
+                         "destination":  "/contact.html"
+                     },
+                     {
+                         "source":  "/eq",
+                         "destination":  "/eq.html"
+                     },
+                     {
+                         "source":  "/sp",
+                         "destination":  "/sp.html"
+                     },
+                     {
+                         "source":  "/mix",
+                         "destination":  "/mix.html"
+                     }
+                 ]
 }
