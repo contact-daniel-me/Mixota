@@ -471,51 +471,92 @@
 
     updateStatus('Saving project locally...', 'loading');
 
+    function onSaveSuccess() {
+      state.hasUnsavedEdits = false;
+      updateStatus('Project saved', '');
+      showToast('Project saved! You can resume editing anytime.', 2500);
+    }
+
+    function onSaveError(msg) {
+      console.warn('[Mixota CMS] Save error:', msg);
+      updateStatus('Local save failed', 'error');
+      showToast(msg || 'Could not save project locally.', 2500);
+    }
+
     var fls = editor && (editor.fls || editor.local);
     if (fls && typeof fls.SaveSession === 'function') {
-      fls.SaveSession(
-        buffer,
-        'cms_' + state.recordingId,
-        state.fileName || 'CMS Recording',
-        function (rec, err) {
-          if (err) {
-            updateStatus('Local save failed', 'error');
-            showToast('Could not save project locally.', 2500);
-          } else {
-            state.hasUnsavedEdits = false;
-            updateStatus('Project saved', '');
-            showToast('Project saved! You can resume editing anytime.', 2500);
-          }
-        },
-        true,
-      );
-    } else {
-      // Fallback direct IndexedDB save
       try {
-        var req = indexedDB.open('mixota-audio', 1);
-        req.onsuccess = function (e) {
-          var db = e.target.result;
-          if (!db.objectStoreNames.contains('sessions')) {
-            updateStatus('Project saved', '');
-            showToast('Project saved!', 2000);
-            return;
-          }
-          var trans = db.transaction(['sessions'], 'readwrite');
-          var store = trans.objectStore('sessions');
-          store.put({
-            id: 'cms_' + state.recordingId,
-            name: state.fileName || 'CMS Recording',
-            created: Date.now(),
-            duration: buffer.duration,
-            sampleRate: buffer.sampleRate,
-          });
-          state.hasUnsavedEdits = false;
-          updateStatus('Project saved', '');
-          showToast('Project saved! You can resume editing anytime.', 2500);
-        };
-      } catch (err) {
-        showToast('Project save failed.', 2000);
+        fls.SaveSession(
+          buffer,
+          'cms_' + state.recordingId,
+          state.fileName || 'CMS Recording',
+          function (rec, err) {
+            if (err) {
+              saveProjectDirectly(buffer, onSaveSuccess, onSaveError);
+            } else {
+              onSaveSuccess();
+            }
+          },
+          true,
+        );
+      } catch (e) {
+        console.warn('[Mixota CMS] fls.SaveSession error, falling back:', e);
+        saveProjectDirectly(buffer, onSaveSuccess, onSaveError);
       }
+    } else {
+      saveProjectDirectly(buffer, onSaveSuccess, onSaveError);
+    }
+  }
+
+  // Fallback direct IndexedDB save storing raw channel buffers
+  function saveProjectDirectly(buffer, onSuccess, onError) {
+    try {
+      var req = indexedDB.open('mixota-audio', 1);
+      req.onupgradeneeded = function (e) {
+        var db = e.target.result;
+        if (!db.objectStoreNames.contains('sessions')) {
+          db.createObjectStore('sessions', { keyPath: 'id' });
+        }
+      };
+      req.onsuccess = function (e) {
+        var db = e.target.result;
+        if (!db.objectStoreNames.contains('sessions')) {
+          onSuccess();
+          return;
+        }
+
+        var chans = buffer.numberOfChannels;
+        var chanBuffers = [];
+        for (var i = 0; i < chans; i++) {
+          var data = buffer.getChannelData(i);
+          chanBuffers.push(data.buffer.slice(0));
+        }
+
+        var trans = db.transaction(['sessions'], 'readwrite');
+        var store = trans.objectStore('sessions');
+        var ob = {
+          id: 'cms_' + state.recordingId,
+          name: state.fileName || 'CMS Recording',
+          created: Date.now(),
+          durr: buffer.duration,
+          chans: chans,
+          samplerate: buffer.sampleRate,
+          data: chanBuffers,
+        };
+
+        var putReq = store.put(ob);
+        putReq.onsuccess = function () {
+          onSuccess();
+        };
+        putReq.onerror = function (err) {
+          onError('Failed to save project to IndexedDB.');
+        };
+      };
+      req.onerror = function (err) {
+        onError('IndexedDB access error.');
+      };
+    } catch (e) {
+      onError('Save failed: ' + (e.message || 'Unknown error'));
     }
   }
 
@@ -837,7 +878,7 @@
               saveProjectLocally();
               setTimeout(function () {
                 returnToCms(true);
-              }, 300);
+              }, 400);
             },
           },
         ],
@@ -845,19 +886,33 @@
       return;
     }
 
+    var targetUrl =
+      (state.cmsOrigin || 'https://vitradio.growiota.in') +
+      (state.episodeId ? '/admin/episodes/' + state.episodeId : '/admin/episodes');
+
+    // If opener exists, post message so CMS knows editor finished
     if (w.opener && !w.opener.closed) {
       try {
+        w.opener.postMessage(
+          {
+            type: 'MIXOTA_RETURN_TO_CMS',
+            episodeId: state.episodeId,
+          },
+          state.cmsOrigin || '*',
+        );
         w.opener.focus();
-        showToast('Switched to VIT Community Radio CMS tab.', 2500);
-        return;
       } catch (e) {}
     }
 
-    if (state.cmsOrigin) {
-      w.location.href = state.cmsOrigin + '/admin/episodes/' + (state.episodeId || '');
-    } else {
-      w.location.href = 'http://localhost:5173/admin/episodes/' + (state.episodeId || '');
-    }
+    // Try closing window first
+    try {
+      w.close();
+    } catch (e) {}
+
+    // If window.close() didn't close the tab (browser popup restriction or opened directly), navigate
+    setTimeout(function () {
+      w.location.href = targetUrl;
+    }, 150);
   }
 
   // Main initialization sequence

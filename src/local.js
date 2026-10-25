@@ -101,6 +101,13 @@
 		this.SaveSession = function ( buffer, id, name, callback, quiet ) {
 			var q = this;
 
+			if (!db) {
+				q.Init (function () {
+					q.SaveSession (buffer, id, name, callback, quiet);
+				});
+				return ;
+			}
+
 			var comp = compressors[ compression ];
 			if (!comp.loading && !comp.ready) {
 				comp.init (function() {
@@ -143,7 +150,7 @@
 			};
 
 			var trans = db.transaction(['sessions'], 'readwrite');
-			var addReq = trans.objectStore('sessions').add(ob);
+			var addReq = trans.objectStore('sessions').put(ob);
 
 			addReq.onerror = function(e) {
 				app.fireEvent ('ErrorDB', e);
@@ -262,3 +269,4 @@
 	PKAudioEditor._deps.fls = SaveLocal;
 
 })( window, document, PKAudioEditor );
+
