@@ -483,80 +483,45 @@
       showToast(msg || 'Could not save project locally.', 2500);
     }
 
-    var fls = editor && (editor.fls || editor.local);
-    if (fls && typeof fls.SaveSession === 'function') {
-      try {
-        fls.SaveSession(
-          buffer,
-          'cms_' + state.recordingId,
-          state.fileName || 'CMS Recording',
-          function (rec, err) {
-            if (err) {
-              saveProjectDirectly(buffer, onSaveSuccess, onSaveError);
-            } else {
-              onSaveSuccess();
-            }
-          },
-          true,
-        );
-      } catch (e) {
-        console.warn('[Mixota CMS] fls.SaveSession error, falling back:', e);
-        saveProjectDirectly(buffer, onSaveSuccess, onSaveError);
-      }
-    } else {
-      saveProjectDirectly(buffer, onSaveSuccess, onSaveError);
-    }
-  }
-
-  // Fallback direct IndexedDB save storing raw channel buffers
-  function saveProjectDirectly(buffer, onSuccess, onError) {
     try {
-      var req = indexedDB.open('mixota-audio', 1);
-      req.onupgradeneeded = function (e) {
-        var db = e.target.result;
-        if (!db.objectStoreNames.contains('sessions')) {
-          db.createObjectStore('sessions', { keyPath: 'id' });
-        }
+      var chans = buffer.numberOfChannels;
+      var chanBuffers = [];
+      for (var i = 0; i < chans; i++) {
+        var data = buffer.getChannelData(i);
+        chanBuffers.push(data.buffer.slice(0));
+      }
+
+      var ob = {
+        id: 'cms_' + state.recordingId,
+        name: state.fileName || 'CMS Recording',
+        created: Date.now(),
+        durr: buffer.duration,
+        chans: chans,
+        samplerate: buffer.sampleRate,
+        data: chanBuffers,
+        markers: (editor && editor.mrk && typeof editor.mrk.serEd === 'function') ? editor.mrk.serEd() : []
       };
-      req.onsuccess = function (e) {
-        var db = e.target.result;
-        if (!db.objectStoreNames.contains('sessions')) {
-          onSuccess();
+
+      openSessionStore('readwrite', function (err, store) {
+        if (err || !store) {
+          onSaveError('IndexedDB access error.');
           return;
         }
 
-        var chans = buffer.numberOfChannels;
-        var chanBuffers = [];
-        for (var i = 0; i < chans; i++) {
-          var data = buffer.getChannelData(i);
-          chanBuffers.push(data.buffer.slice(0));
+        try {
+          var putReq = store.put(ob);
+          putReq.onsuccess = function () {
+            onSaveSuccess();
+          };
+          putReq.onerror = function (e) {
+            onSaveError('Failed to store project draft.');
+          };
+        } catch (e) {
+          onSaveError('Database write error.');
         }
-
-        var trans = db.transaction(['sessions'], 'readwrite');
-        var store = trans.objectStore('sessions');
-        var ob = {
-          id: 'cms_' + state.recordingId,
-          name: state.fileName || 'CMS Recording',
-          created: Date.now(),
-          durr: buffer.duration,
-          chans: chans,
-          samplerate: buffer.sampleRate,
-          data: chanBuffers,
-        };
-
-        var putReq = store.put(ob);
-        putReq.onsuccess = function () {
-          onSuccess();
-        };
-        putReq.onerror = function (err) {
-          onError('Failed to save project to IndexedDB.');
-        };
-      };
-      req.onerror = function (err) {
-        onError('IndexedDB access error.');
-      };
+      });
     } catch (e) {
-      onError('Save failed: ' + (e.message || 'Unknown error'));
+      onSaveError('Save failed: ' + (e.message || 'Unknown error'));
     }
   }
 

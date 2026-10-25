@@ -3,7 +3,7 @@
 
 	var db;
 	var db_name    = 'mixota-audio';
-	var db_version = 1;
+	var db_version = 2;
 	var db_ready   = false;
 
 	var compressors = {
@@ -78,7 +78,7 @@
 
 			request.onupgradeneeded = function(e) {
 				var db = e.target.result;
-				db.createObjectStore('sessions', {keyPath:'id'});
+				if (!db.objectStoreNames.contains('sessions')) { db.createObjectStore('sessions', {keyPath:'id'}); }
 			};
 
 			request.onsuccess = function(e) {
