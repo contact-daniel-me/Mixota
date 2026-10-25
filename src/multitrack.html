@@ -1,0 +1,79 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Mixota</title>
+	<link href="ico.png" rel="shortcut icon">
+	<meta charset="utf-8" />
+	<link rel="manifest" href="manifest.json">
+
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
+
+	<meta name="description" content="Mixota is a browser-based audio editor for editing, trimming, and refining audio directly from your browser."/>
+	<meta name="author" content="growiota"/>
+	<meta property="og:image" content="icon.png"/>
+	<meta property="og:site_name" content="Mixota"/>
+	<meta property="og:title" content="Mixota">
+	<meta property="og:description" content="Mixota is a browser-based audio editor for editing, trimming, and refining audio directly from your browser. A product by growiota.">
+	<meta name="keywords" content="mixota, audio editor, online audio editor, growiota, waveform editor, sound editing, multitrack, browser DAW, audio trimmer, mixota audio">
+	<link rel="apple-touch-icon" href="icon.png">
+	<meta name="mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-title" content="Mixota">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+	<meta name="theme-color" content="#0A0B0A">
+
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:title" content="Mixota">
+	<meta name="twitter:description" content="Mixota is a browser-based audio editor for editing, trimming, and refining audio directly from your browser. A product by growiota.">
+	<meta name="twitter:image" content="icon.png">
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+	<link rel="stylesheet" type="text/css" href="main.css">
+	<link rel="stylesheet" type="text/css" href="mixota-cms.css">
+</head>
+<body>
+	<div id="app"></div>
+
+	<script src="dist/wavesurfer.js"></script>
+	<script src="dist/plugin/wavesurfer.regions.js"></script>
+	<script src="oneup.js"></script>
+
+	<script src="app.js"></script>
+	<script src="keys.js"></script>
+	<script src="markers.js"></script>
+	<script src="contextmenu.js"></script>
+	<script src="lufs.js"></script>
+	<script src="ui-fx.js"></script>
+	<script src="ui.js"></script>
+	<script src="modal.js"></script>
+	<script src="state.js"></script>
+	<script src="engine.js"></script>
+	<script src="actions.js"></script>
+	<script src="drag.js"></script>
+	<script src="recorder.js"></script>
+
+	<script src="welcome.js"></script>
+	<script src="fx-pg-eq.js"></script>
+	<script src="fx-auto.js"></script>
+	<script src="local.js"></script>
+	<script src="id3.js"></script>
+	<script src="lzma.js"></script>
+	<script src="dist/supabase.js"></script>
+	<script src="mixota-format.js"></script>
+	<script src="multitrack.js?v=1.1"></script>
+	<script>
+		var editor = PKAudioEditor.init ('app');
+		if ('serviceWorker' in navigator) {
+			try {
+			//	navigator.serviceWorker.register( 'sw.js' );
+			} catch ( error ) {}
+		}
+	</script>
+	<script src="mixota-cms.js"></script>
+</body>
+</html>
+
