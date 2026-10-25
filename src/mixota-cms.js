@@ -349,18 +349,66 @@
     return storageRes.data.signedUrl;
   }
 
-  // Check if a saved project draft exists in IndexedDB for this recording
-  function checkSavedDraft(callback) {
+  // Self-healing IndexedDB helper that auto-creates the 'sessions' store if missing
+  function openSessionStore(mode, callback) {
     try {
-      var req = indexedDB.open('mixota-audio', 1);
+      var req = indexedDB.open('mixota-audio', 2);
+      req.onupgradeneeded = function (e) {
+        var db = e.target.result;
+        if (!db.objectStoreNames.contains('sessions')) {
+          db.createObjectStore('sessions', { keyPath: 'id' });
+        }
+      };
       req.onsuccess = function (e) {
         var db = e.target.result;
         if (!db.objectStoreNames.contains('sessions')) {
-          callback(null);
+          db.close();
+          var nextVer = (db.version || 2) + 1;
+          var upReq = indexedDB.open('mixota-audio', nextVer);
+          upReq.onupgradeneeded = function (ev) {
+            var udb = ev.target.result;
+            if (!udb.objectStoreNames.contains('sessions')) {
+              udb.createObjectStore('sessions', { keyPath: 'id' });
+            }
+          };
+          upReq.onsuccess = function (ev) {
+            var udb = ev.target.result;
+            try {
+              var trans = udb.transaction(['sessions'], mode);
+              callback(null, trans.objectStore('sessions'), udb);
+            } catch (transErr) {
+              callback(transErr);
+            }
+          };
+          upReq.onerror = function (err) {
+            callback(err);
+          };
           return;
         }
-        var trans = db.transaction(['sessions'], 'readonly');
-        var store = trans.objectStore('sessions');
+
+        try {
+          var trans = db.transaction(['sessions'], mode);
+          callback(null, trans.objectStore('sessions'), db);
+        } catch (transErr) {
+          callback(transErr);
+        }
+      };
+      req.onerror = function (err) {
+        callback(err);
+      };
+    } catch (e) {
+      callback(e);
+    }
+  }
+
+  // Check if a saved project draft exists in IndexedDB for this recording
+  function checkSavedDraft(callback) {
+    openSessionStore('readonly', function (err, store) {
+      if (err || !store) {
+        callback(null);
+        return;
+      }
+      try {
         var draftReq = store.get('cms_' + state.recordingId);
         draftReq.onsuccess = function () {
           callback(draftReq.result || null);
@@ -368,13 +416,10 @@
         draftReq.onerror = function () {
           callback(null);
         };
-      };
-      req.onerror = function () {
+      } catch (e) {
         callback(null);
-      };
-    } catch (e) {
-      callback(null);
-    }
+      }
+    });
   }
 
   // Load audio buffer into Mixota editor engine
