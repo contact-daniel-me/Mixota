@@ -13,13 +13,22 @@
 		var undo_state_list = [];
 		var redo_state_list = [];
 
-		// snapshots retain full audio buffers, so long files can hold
-		// gigabytes hostage well before the depth cap is reached - keep
-		// the total retained bytes bounded instead. _min_keep undo steps
-		// are always available no matter their size (product decision:
-		// never fall below 10), the byte budget only trims beyond them
-		var _max_bytes = 1.5 * 1024 * 1024 * 1024;
+		// Snapshots retain full audio buffers, so long files can hold
+		// gigabytes hostage well before the depth cap is reached. Keep
+		// the total retained bytes bounded across both undo and redo lists.
+		// Adapt _min_keep based on individual buffer sizes so large recordings
+		// don't exhaust browser heap (default 10 steps, down to 2 for massive files).
+		var _max_bytes = (app && app.isMobile) ? (384 * 1024 * 1024) : (1.5 * 1024 * 1024 * 1024);
 		var _min_keep  = 10;
+
+		function getEffectiveMinKeep ( sampleBuffer ) {
+			if (!sampleBuffer || !sampleBuffer.length) return _min_keep;
+			var ch = sampleBuffer.numberOfChannels || 1;
+			var bufferBytesSize = sampleBuffer.length * ch * 4;
+			if (bufferBytesSize <= 0) return _min_keep;
+			var safeCount = Math.floor((_max_bytes * 0.70) / bufferBytesSize);
+			return Math.max( 2, Math.min( _min_keep, safeCount ) );
+		}
 
 		function bufferBytes ( b, seen ) {
 			if (!b || !b.length || !b.numberOfChannels || seen.indexOf ( b ) !== -1) return 0;
@@ -37,10 +46,6 @@
 		}
 
 		function seedLiveMultitrackBuffers ( seen, pending_editor_buffer ) {
-			// buffers still referenced by live multitrack clips are
-			// retained regardless, so snapshots sharing them cost nothing.
-			// The pending editor buffer is the exception: editing a clip will
-			// replace that live reference immediately after this state push.
 			var mt = app.multitrack && app.multitrack.getState ?
 				app.multitrack.getState () : null;
 			var clips = mt && mt.clips;
@@ -58,31 +63,64 @@
 		}
 
 		function trimForMemory () {
-			var len = undo_state_list.length;
-			if (len <= _min_keep) return ;
+			var uLen = undo_state_list.length;
+			var rLen = redo_state_list.length;
+			if (uLen === 0 && rLen === 0) return ;
 
-			// An untyped (audio edit) push is about to replace the live
-			// editor buffer, so count the newest snapshot as pending
-			// retention. Typed pushes ('mult'/'mrk') leave the editor
-			// buffer live - it costs nothing wherever history shares it
-			// (including entries recycled through undo/redo). Live
-			// multitrack clip buffers cost nothing either way.
-			var seen = [];
-			var newest = undo_state_list[len - 1];
 			var live = liveEditorBuffer ();
+			var sampleBuf = live || (uLen > 0 && undo_state_list[uLen - 1] && undo_state_list[uLen - 1].data);
+			var effectiveMinKeep = getEffectiveMinKeep( sampleBuf );
+
+			var seen = [];
+			var newest = uLen > 0 ? undo_state_list[uLen - 1] : null;
 			var pending = newest && !newest.type && newest.data === live ?
 				live : null;
 			if (live && !pending) seen.push ( live );
 			seedLiveMultitrackBuffers ( seen, pending );
 
-			var total = 0;
-			for (var i = len - 1; i >= 0; --i) {
-				var add = stateBytes ( undo_state_list[i], seen );
-				if (add > 0 && total + add > _max_bytes && (len - 1 - i) >= _min_keep) {
-					undo_state_list.splice ( 0, i + 1 );
+			// 1. Account for undo states from newest to oldest
+			var undoBytesArr = [];
+			var totalUndo = 0;
+			for (var i = uLen - 1; i >= 0; --i) {
+				var addU = stateBytes ( undo_state_list[i], seen );
+				undoBytesArr[i] = addU;
+				totalUndo += addU;
+			}
+
+			// 2. Account for redo states (nearest index 0 to furthest)
+			var redoBytesArr = [];
+			var totalRedo = 0;
+			for (var j = 0; j < rLen; ++j) {
+				var addR = stateBytes ( redo_state_list[j], seen );
+				redoBytesArr[j] = addR;
+				totalRedo += addR;
+			}
+
+			var total = totalUndo + totalRedo;
+			if (total <= _max_bytes) return ;
+
+			// 3. Trim oldest redo states first (furthest into future)
+			while (redo_state_list.length > 0 && total > _max_bytes) {
+				var lastRedoIdx = redo_state_list.length - 1;
+				total -= (redoBytesArr[lastRedoIdx] || 0);
+				redo_state_list.pop ();
+			}
+
+			if (total <= _max_bytes) return ;
+
+			// 4. Trim oldest undo states, respecting effectiveMinKeep
+			for (var k = 0; k < undo_state_list.length; ++k) {
+				if ((undo_state_list.length - k) <= effectiveMinKeep) break;
+				var freed = undoBytesArr[k] || 0;
+				total -= freed;
+				if (total <= _max_bytes) {
+					undo_state_list.splice ( 0, k + 1 );
 					return ;
 				}
-				total += add;
+			}
+
+			if (total > _max_bytes && undo_state_list.length > effectiveMinKeep) {
+				undo_state_list.splice ( 0, undo_state_list.length - effectiveMinKeep );
 			}
 		}
 
@@ -157,7 +195,9 @@
 				}
 
 				updateStateData ( last_state, current );
+				if (redo_state_list.length >= _depth) redo_state_list.pop ();
 				redo_state_list.unshift (last_state);
+				trimForMemory ();
 
 				_fireEvent ( 'DidStateChange', undo_state_list, redo_state_list);
 			}
@@ -223,5 +263,8 @@
 	};
 	
 	PKAE._deps.state = PKState;
+	if (typeof module !== 'undefined' && module.exports) {
+		module.exports = { PKState };
+	}
 	
-})( PKAudioEditor );
+})( typeof PKAudioEditor !== 'undefined' ? PKAudioEditor : (typeof window !== 'undefined' ? (window.PKAudioEditor = { _deps: {} }) : { _deps: {} }) );

@@ -290,7 +290,7 @@
 			// ----
 		};
 
-		this.DownloadFile = function ( name, format, kbps, selection, stereo, bit_depth, dither ) {
+		this.DownloadFile = function ( name, format, kbps, selection, stereo, bit_depth, dither, sample_rate ) {
 			var canceled = false;
 			var mt = app.multitrack &&
 				app.multitrack.IsOn &&
@@ -349,7 +349,7 @@
 					}
 					else
 						app.fireEvent ('DidProgressModal', val);
-				}, mt_buffer);
+				}, mt_buffer, sample_rate);
 			}
 		}
 		this.LoadSample = function ( file ) {
@@ -2688,12 +2688,24 @@
                       (a.src = "rnn_denoise.js"),
                       (a.onload = function () {
                           noisernn_load = !0;
+                          var retries = 0;
+                          var maxRetries = 25;
                           var f = function () {
-                              window.Module && window.Module.asm && window.Module.asm.malloc
-                                  ? b()
-                                  : setTimeout(function () {
-                                        f();
-                                    }, 350);
+                              if (window.Module && window.Module.asm && window.Module.asm.malloc) {
+                                  b();
+                              } else if (++retries > maxRetries) {
+                                  noisernn_load = !1;
+                                  if (typeof OneUp === "function") {
+                                      OneUp("Could not initialize Neural Noise Reduction (WASM timeout)", 4000);
+                                  } else {
+                                      alert("Could not initialize Neural Noise Reduction module.");
+                                  }
+                                  console.error("RNNoise WebAssembly initialization timed out after 25 attempts.");
+                              } else {
+                                  setTimeout(function () {
+                                      f();
+                                  }, 350);
+                              }
                           };
                           setTimeout(function () {
                               f();

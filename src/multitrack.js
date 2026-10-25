@@ -818,6 +818,14 @@
 			beat_bar.appendChild(bpm_input);
 			beat_bar.appendChild(lbl);
 			beat_bar.appendChild(btn_sig);
+
+			var btn_bounce = makeButton('✦ Bounce to Master', 'Mixdown multitrack stems and open in Mastering workspace', false, 'pk_btn pk_mtbeat_btn pk_mt_bounce_btn');
+			btn_bounce.onclick = function (e) {
+				e.stopPropagation();
+				BounceToMaster();
+				this.blur();
+			};
+			beat_bar.appendChild(btn_bounce);
 			if (sel && sel.nextSibling) toolbar.insertBefore(beat_bar, sel.nextSibling);
 			else toolbar.appendChild(beat_bar);
 			updateBeatUI();
@@ -4007,6 +4015,7 @@
 			var vals = {};
 			for (var i = 0; i < clips.length; ++i) {
 				var clip = clips[i];
+				if (trackFilter && clip.track !== trackFilter) continue;
 				var tr = findTrack(clip.track);
 				var gain = trackGain(tr, solo);
 				if (!tr || gain <= 0 || time < clip.start || time > clipEnd(clip))
@@ -4081,7 +4090,7 @@
 			return out;
 		}
 
-		function MixdownAsync(selection, done) {
+		function MixdownAsync(selection, done, trackFilter) {
 			if (!clips.length) return done(null);
 
 			var Ctx = w.OfflineAudioContext || w.webkitOfflineAudioContext;
@@ -4158,6 +4167,62 @@
 					finish(Mixdown(selection));
 				});
 			}
+		}
+
+		var is_bouncing = false;
+		function BounceToMaster(callback) {
+			if (is_bouncing) {
+				if (typeof OneUp === 'function') OneUp('Mixdown already in progress...', 1200);
+				return;
+			}
+			if (!hasClips()) {
+				if (typeof OneUp === 'function') OneUp('No audio clips in Multitrack to bounce', 1400);
+				return;
+			}
+			is_bouncing = true;
+			if (typeof OneUp === 'function') OneUp('✦ Rendering Multitrack to Master...', 2500);
+
+			MixdownAsync(null, function (masterBuffer) {
+				is_bouncing = false;
+				if (!masterBuffer) {
+					if (typeof OneUp === 'function') OneUp('Failed to render Multitrack mixdown', 1500);
+					if (callback) callback(null);
+					return;
+				}
+
+				// Safely transfer master mix to single-track engine without reloading or destroying multitrack tracks
+				var wv = app.engine.wavesurfer;
+				Stop();
+				Toggle(false);
+				app.engine.is_ready = true;
+				wv.loadDecodedBuffer(masterBuffer);
+				wv.backend.SetNumberOfChannels(masterBuffer.numberOfChannels);
+				wv.ActiveChannels = masterBuffer.numberOfChannels === 1 ? [1] : [1, 1];
+				wv.SelectedChannelsLen = masterBuffer.numberOfChannels;
+				wv.drawer.params.ActiveChannels = wv.ActiveChannels;
+				wv.getWaveEl().style.opacity = '1';
+				wv.drawBuffer();
+
+				var masterTitle = (app.projectTitle || 'Project') + ' (Master)';
+				app.fireEvent('DidLoadFile', masterTitle);
+				app.fireEvent('DidUpdateLen', wv.getDuration());
+				app.fireEvent('RequestSeekTo', 0);
+				app.fireEvent('RequestResize');
+
+				// Switch to mastering workspace
+				var mstTab = d.getElementById('pk-tab-mastering');
+				if (mstTab) mstTab.click();
+
+				// Automatically trigger re-analysis in the mastering console
+				if (app.ui && app.ui.refreshMastering) {
+					app.ui.refreshMastering(true);
+				}
+
+				if (typeof OneUp === 'function') {
+					OneUp('✦ Bounced to Master (' + masterBuffer.duration.toFixed(1) + 's Stereo)', 2200);
+				}
+				if (callback) callback(masterBuffer);
+			});
 		}
 
 		function GetTempoBuffer(selection_only) {
@@ -5335,7 +5400,49 @@
 		q.GetRegion = function () { return region; };
 		q.HasClips = hasClips;
 		q.Mixdown = Mixdown;
+		function ExportStems(format, kbps, bit_depth, dither, target_sample_rate, callback) {
+			if (!clips.length || !tracks.length) {
+				if (typeof OneUp === 'function') OneUp('No tracks to export', 1200);
+				return;
+			}
+			format = format || 'wav';
+			var projName = (app.projectTitle || 'Mixota Project').trim().replace(/\.[^/.]+$/, '');
+			var currentTrackIdx = 0;
+
+			function exportNextStem() {
+				if (currentTrackIdx >= tracks.length) {
+					if (typeof OneUp === 'function') OneUp('✦ Stems export complete (' + tracks.length + ' tracks)', 2000);
+					if (callback) callback();
+					return;
+				}
+				var tr = tracks[currentTrackIdx++];
+				var hasClips = false;
+				for (var c = 0; c < clips.length; c++) {
+					if (clips[c].track === tr.id) { hasClips = true; break; }
+				}
+				if (!hasClips) {
+					exportNextStem();
+					return;
+				}
+
+				MixdownAsync(null, function (stemBuffer) {
+					if (!stemBuffer) {
+						exportNextStem();
+						return;
+					}
+					var cleanTrackName = (tr.name || ('Track_' + tr.id)).replace(/[^a-zA-Z0-9_\- ]/g, '_');
+					var stemFileName = projName + ' - ' + cleanTrackName + '.' + format;
+					app.engine.DownloadFile(stemFileName, format, kbps, false, true, bit_depth, dither, target_sample_rate);
+					setTimeout(exportNextStem, 400);
+				}, tr.id);
+			}
+
+			exportNextStem();
+		}
+
 		q.MixdownAsync = MixdownAsync;
+		q.BounceToMaster = BounceToMaster;
+		q.ExportStems = ExportStems;
 		q.GetTempoBuffer = GetTempoBuffer;
 		q.GetFxBuffer = GetFxBuffer;
 		q.RecordToggle = RecordToggle;

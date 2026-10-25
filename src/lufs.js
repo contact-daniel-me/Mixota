@@ -229,7 +229,7 @@
 		};
 	}
 
-	PKAE._deps.lufs = {
+	var lufsObj = {
 		BS1770Block: C,
 		kWeightCoeffs: kWeightCoeffs,
 		integratedLUFS: integratedLUFS,
@@ -237,4 +237,8 @@
 		gainForTarget: gainForTarget,
 		db: db
 	};
-})(PKAudioEditor);
+	PKAE._deps.lufs = lufsObj;
+	if (typeof module !== 'undefined' && module.exports) {
+		module.exports = lufsObj;
+	}
+})(typeof PKAudioEditor !== 'undefined' ? PKAudioEditor : (typeof window !== 'undefined' ? (window.PKAudioEditor = { _deps: {} }) : { _deps: {} }));

@@ -916,13 +916,78 @@
 			}
 		}
 
-		function DownloadFile( with_name, format, kbps, selection, stereo, bit_depth, dither, callback, source_buffer ) {
+		
+		function ResampleBuffer( buffer, targetSampleRate, done ) {
+			if (!buffer || !targetSampleRate || buffer.sampleRate === targetSampleRate) {
+				return done(buffer);
+			}
+			var Ctx = (typeof window !== 'undefined' && (window.OfflineAudioContext || window.webkitOfflineAudioContext));
+			if (Ctx) {
+				try {
+					var numChannels = buffer.numberOfChannels;
+					var targetLen = Math.max(1, Math.round(buffer.duration * targetSampleRate));
+					var offCtx = new Ctx(numChannels, targetLen, targetSampleRate);
+					var srcNode = offCtx.createBufferSource();
+					srcNode.buffer = buffer;
+					srcNode.connect(offCtx.destination);
+					srcNode.start(0);
+					var p = offCtx.startRendering();
+					if (p && p.then) {
+						p.then(function(resampled) {
+							done(resampled);
+						}).catch(function() {
+							done(linearResampleFallback(buffer, targetSampleRate));
+						});
+						return;
+					}
+				} catch (e) {
+					console.warn("OfflineAudioContext resampling error:", e);
+				}
+			}
+			done(linearResampleFallback(buffer, targetSampleRate));
+		}
+
+		function linearResampleFallback(buffer, targetRate) {
+			var numChannels = buffer.numberOfChannels;
+			var sourceRate = buffer.sampleRate;
+			var ratio = sourceRate / targetRate;
+			var newLength = Math.max(1, Math.round(buffer.length / ratio));
+			var channelData = [];
+			for (var c = 0; c < numChannels; c++) {
+				var src = buffer.getChannelData(c);
+				var dst = new Float32Array(newLength);
+				for (var i = 0; i < newLength; i++) {
+					var srcPos = i * ratio;
+					var idx = Math.floor(srcPos);
+					var frac = srcPos - idx;
+					var s0 = src[idx] || 0;
+					var s1 = (idx + 1 < src.length) ? src[idx + 1] : s0;
+					dst[i] = s0 + frac * (s1 - s0);
+				}
+				channelData.push(dst);
+			}
+			return {
+				numberOfChannels: numChannels,
+				sampleRate: targetRate,
+				length: newLength,
+				duration: newLength / targetRate,
+				getChannelData: function(ch) { return channelData[ch]; }
+			};
+		}
+
+		function DownloadFile( with_name, format, kbps, selection, stereo, bit_depth, dither, callback, source_buffer, target_sample_rate ) {
 			var originalBuffer = source_buffer ||
 				(wavesurfer && wavesurfer.backend && wavesurfer.backend.buffer);
 			if (!originalBuffer) {
 				return false;
 			}
 
+			if (target_sample_rate && target_sample_rate !== originalBuffer.sampleRate) {
+				ResampleBuffer(originalBuffer, target_sample_rate, function(resampled) {
+					DownloadFile(with_name, format, kbps, selection, stereo, bit_depth, dither, callback, resampled, null);
+				});
+				return true;
+			}
 
 			if (format === 'mp3') {
 				worker = new Worker('lame.js');
@@ -1273,7 +1338,12 @@
 			var gain = val && val.gain;
 			if (!(gain > 0) && PKAE._deps.lufs) {
 				var report = PKAE._deps.lufs.analyze (source.buffer);
-				gain = PKAE._deps.lufs.gainForTarget (report, val.target, val.ceiling).gain;
+				if (val && val.useLimiter) {
+					var gainDb = isFinite (report.lufs) ? (val.target / 1) - report.lufs : 0;
+					gain = Math.pow (10, gainDb / 20);
+				} else {
+					gain = PKAE._deps.lufs.gainForTarget (report, val.target, val.ceiling).gain;
+				}
 			}
 			return gain > 0 ? gain : 1;
 		}
@@ -1610,6 +1680,8 @@
 				return {
 					filter : function ( audio_ctx, destination, source, duration, preview ) {
 						var gain = lufsNormalizeGain (source, val);
+						var ceilLin = val && isFinite (val.ceiling) ? Math.pow (10, val.ceiling / 20) : 1.0;
+						var useLimiter = !!(val && val.useLimiter);
 
 						if (preview)
 							return gainFilter (audio_ctx, destination, source, gain);
@@ -1617,7 +1689,16 @@
 						for (var i = 0; i < source.buffer.numberOfChannels; ++i) {
 							var chan_data = source.buffer.getChannelData (i);
 							for (var k = 0, len = chan_data.length; k < len; ++k) {
-								chan_data[k] *= gain;
+								var s = chan_data[k] * gain;
+								if (useLimiter) {
+									var abs_s = Math.abs (s);
+									if (abs_s > ceilLin) {
+										var over = abs_s - ceilLin;
+										var compressed = ceilLin + Math.tanh (over / ceilLin) * (ceilLin * 0.08);
+										s = s > 0 ? Math.min (ceilLin, compressed) : -Math.min (ceilLin, compressed);
+									}
+								}
+								chan_data[k] = s;
 							}
 						}
 

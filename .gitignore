@@ -6,3 +6,4 @@ node_modules/
 *.br
 .vscode/
 .idea/
+scratch/

@@ -1,11 +1,20 @@
 ﻿import os
 import http.server
 import urllib.parse
+import mimetypes
+
+mimetypes.init()
+mimetypes.add_type('application/wasm', '.wasm')
 
 PORT = 5055
 DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 
 class Handler(http.server.SimpleHTTPRequestHandler):
+    extensions_map = http.server.SimpleHTTPRequestHandler.extensions_map.copy()
+    extensions_map['.wasm'] = 'application/wasm'
+    extensions_map['.js'] = 'application/javascript'
+    extensions_map['.json'] = 'application/json'
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=DIRECTORY, **kwargs)
 

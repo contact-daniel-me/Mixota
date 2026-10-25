@@ -14,27 +14,15 @@
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxb3liaGV2dm5reWNlcHVqb3NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4OTUwMDksImV4cCI6MjEwNDQ3MTAwOX0.30mKrw-kXCaohKcU2S81yzeiNt4PXwlrXiGar84Cq94';
   var AUDIO_BUCKET = 'radio-audio';
 
-  // Parse query parameters
-  var searchParams = new URLSearchParams(w.location.search);
+  // Parse query parameters safely
+  var searchStr = (w.location && w.location.search) ? w.location.search : '';
+  var searchParams = new URLSearchParams(searchStr);
   var recordingId = searchParams.get('recordingId');
   var episodeId = searchParams.get('episodeId');
   var fileName = searchParams.get('fileName') || '';
   var projectTitle = searchParams.get('title') || '';
   var targetField = searchParams.get('target') || 'final_audio_file_id';
   var cmsOrigin = searchParams.get('cmsOrigin') || '';
-
-  // Only activate integration if recordingId is passed
-  if (!recordingId) {
-    return;
-  }
-
-  // Initialize Supabase Client
-  var supabase = null;
-  if (w.supabase && typeof w.supabase.createClient === 'function') {
-    supabase = w.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  } else if (w.createClient) {
-    supabase = w.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  }
 
   // Integration State
   var state = {
@@ -51,6 +39,29 @@
     hasUnsavedEdits: false,
     barEl: null,
   };
+
+  var MixotaCMS = {
+    createSafeEpisodeFinalTakePayload: createSafeEpisodeFinalTakePayload,
+    state: state,
+    uploadFinalAudioToCms: uploadFinalAudioToCms
+  };
+  w.MixotaCMS = MixotaCMS;
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = MixotaCMS;
+  }
+
+  // Only activate integration DOM / UI if recordingId is passed and document is present
+  if (!recordingId || !d.getElementById) {
+    return;
+  }
+
+  // Initialize Supabase Client
+  var supabase = null;
+  if (w.supabase && typeof w.supabase.createClient === 'function') {
+    supabase = w.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  } else if (w.createClient) {
+    supabase = w.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
 
   // Helper to reliably retrieve the PKAudioEditor / editor instance
   function getEditor() {
@@ -740,8 +751,44 @@
     }
   }
 
+  // Strict allowlist validator: constructs update payload for final take while ensuring raw audio_file_id is never modified
+  function createSafeEpisodeFinalTakePayload(finalAudioFileIdOrObj, durationSeconds) {
+    var rawInput = typeof finalAudioFileIdOrObj === 'object' && finalAudioFileIdOrObj !== null
+      ? finalAudioFileIdOrObj
+      : { final_audio_file_id: finalAudioFileIdOrObj, duration_seconds: durationSeconds };
+
+    // Invariant check: raw master recording (audio_file_id) must NEVER be updated or overwritten!
+    if (Object.prototype.hasOwnProperty.call(rawInput, 'audio_file_id')) {
+      throw new Error('Invariant violation: Attempted to mutate or overwrite raw master audio_file_id.');
+    }
+
+    var id = rawInput.final_audio_file_id;
+    if (!id || typeof id !== 'string' || id.trim().length === 0) {
+      throw new Error('Valid final_audio_file_id string is required.');
+    }
+
+    var dur = rawInput.duration_seconds;
+    if (dur !== undefined && (typeof dur !== 'number' || !isFinite(dur) || dur < 0)) {
+      throw new Error('duration_seconds must be a non-negative finite number.');
+    }
+
+    var safeDuration = typeof dur === 'number' && isFinite(dur) && dur >= 0
+      ? dur
+      : 0;
+
+    // Strict allowlist: ONLY final_audio_file_id and duration_seconds are permitted in the returned update payload.
+    return {
+      final_audio_file_id: id.trim(),
+      duration_seconds: safeDuration
+    };
+  }
+
   // Upload exported audio to Supabase Storage and update episode final_audio_file_id
   async function uploadFinalAudioToCms(blob, filename, durationSeconds) {
+    if (!state.episodeId) {
+      throw new Error('Cannot export audio: Associated CMS Episode ID is missing.');
+    }
+
     updateStatus('Uploading finished audio to CMS...', 'loading');
 
     var safeName = filename
@@ -790,13 +837,11 @@
 
     var newAudioFile = insertRes.data;
 
-    // 3. Update episodes table: assign final_audio_file_id (leaving raw audio_file_id unchanged!)
+    // 3. Update episodes table: assign final_audio_file_id using strictly validated allowlist payload
+    var safePayload = createSafeEpisodeFinalTakePayload(newAudioFile.id, durationSeconds);
     var updateRes = await supabase
       .from('episodes')
-      .update({
-        final_audio_file_id: newAudioFile.id,
-        duration_seconds: Math.round(durationSeconds),
-      })
+      .update(safePayload)
       .eq('id', state.episodeId);
 
     if (updateRes.error) {
@@ -1154,4 +1199,13 @@
   } else {
     d.addEventListener('DOMContentLoaded', onReady);
   }
-})(window, document);
+
+  var MixotaCMS = {
+    createSafeEpisodeFinalTakePayload: createSafeEpisodeFinalTakePayload,
+    state: state
+  };
+  w.MixotaCMS = MixotaCMS;
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = MixotaCMS;
+  }
+})(typeof window !== 'undefined' ? window : globalThis, typeof document !== 'undefined' ? document : {});

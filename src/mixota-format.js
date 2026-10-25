@@ -58,7 +58,7 @@
 			return true;
 		};
 
-		q.ExportMultitrack = function ( name, st ) {
+		q.BuildSessionParts = function ( st ) {
 			var wtr = writer ();
 			var parts = [];
 			var audio = [];
@@ -80,7 +80,7 @@
 				track_map[tracks[i].id] = i;
 			for (i = 0; i < clips.length; ++i) {
 				if (!clips[i].buffer || track_map[clips[i].track] === undefined)
-					return false;
+					return null;
 				clip_map[clips[i].id] = i;
 				audioIndex ( clips[i].buffer, clips[i].name );
 			}
@@ -91,7 +91,7 @@
 			}
 			if (tracks.length > 65534 || clips.length > 65534 ||
 				audio.length > 65534 || xf.length > 65534)
-				return false;
+				return null;
 
 			wtr.u8 (1); wtr.u8 (65); wtr.u8 (77); wtr.u8 (83);
 			wtr.u8 (0);
@@ -101,11 +101,11 @@
 			wtr.u16 (xf.length);
 			wtr.u16 (st.selected_track && track_map[st.selected_track] !== undefined ? track_map[st.selected_track] : 65535);
 			wtr.u16 (st.selected_clip && clip_map[st.selected_clip] !== undefined ? clip_map[st.selected_clip] : 65535);
-			wtr.f32 (st.cursor);
-			wtr.f32 (st.marker);
-			wtr.f32 (st.px_per_sec);
-			wtr.f32 (st.row_h);
-			wtr.f32 (st.master_vol);
+			wtr.f32 (st.cursor || 0);
+			wtr.f32 (st.marker || 0);
+			wtr.f32 (st.px_per_sec || 0);
+			wtr.f32 (st.row_h || 0);
+			wtr.f32 (st.master_vol || 1);
 
 			for (i = 0; i < tracks.length; ++i) {
 				var t = tracks[i];
@@ -171,8 +171,34 @@
 				parts.push ( mb );
 				if (mb.length & 3) parts.push (new Uint8Array (4 - (mb.length & 3)));
 			}
+			return parts;
+		};
 
+		q.BuildSessionBuffer = function ( st ) {
+			var parts = q.BuildSessionParts ( st );
+			if (!parts) return null;
+			var total = 0;
+			for (var i = 0; i < parts.length; ++i) {
+				total += parts[i].byteLength;
+			}
+			var buf = new ArrayBuffer ( total );
+			var u8 = new Uint8Array ( buf );
+			var offset = 0;
+			for (i = 0; i < parts.length; ++i) {
+				var p = parts[i];
+				var src = p instanceof Uint8Array ? p : new Uint8Array ( p.buffer || p, p.byteOffset || 0, p.byteLength );
+				u8.set ( src, offset );
+				offset += p.byteLength;
+			}
+			return buf;
+		};
+
+		q.ExportMultitrack = function ( name, st ) {
+			var parts = q.BuildSessionParts ( st );
+			if (!parts) return false;
+			if (typeof Blob === 'undefined') return parts;
 			var blob = new Blob (parts, {type:'application/x-mixota-session'});
+			if (!d || !d.createElement) return blob;
 			var url = (w.URL || w.webkitURL).createObjectURL ( blob );
 			var a = d.createElement ('a');
 			a.href = url;
@@ -336,4 +362,7 @@
 
 	PKAE._deps.amss = AMSSFormat;
 	PKAE._deps.mixota = AMSSFormat;
-})( window, document, PKAudioEditor );
+	if (typeof module !== 'undefined' && module.exports) {
+		module.exports = { AMSSFormat };
+	}
+})( typeof window !== 'undefined' ? window : globalThis, typeof document !== 'undefined' ? document : {}, typeof PKAudioEditor !== 'undefined' ? PKAudioEditor : { _deps: {} } );

@@ -6,7 +6,10 @@
   "scripts": {
     "start": "python src/server.py",
     "serve": "python src/server.py",
-    "build": "node build.js"
+    "build": "node build.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:node": "node --test test/*.test.mjs"
   },
   "keywords": [
     "mixota",
@@ -21,6 +24,7 @@
   "license": "MIT",
   "homepage": "http://localhost:5055/",
   "devDependencies": {
-    "uglify-js": "^3.19.3"
+    "uglify-js": "^3.19.3",
+    "vitest": "^5.0.5"
   }
 }
