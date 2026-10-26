@@ -363,23 +363,35 @@
   // Self-healing IndexedDB helper that auto-creates the 'sessions' store if missing
   function openSessionStore(mode, callback) {
     try {
-      var req = indexedDB.open('mixota-audio', 2);
+      var req = indexedDB.open('mixota-audio', 4);
       req.onupgradeneeded = function (e) {
         var db = e.target.result;
         if (!db.objectStoreNames.contains('sessions')) {
           db.createObjectStore('sessions', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('recovery')) {
+          db.createObjectStore('recovery', { keyPath: 'projectId' });
+        }
+        if (!db.objectStoreNames.contains('projects_meta')) {
+          db.createObjectStore('projects_meta', { keyPath: 'id' });
         }
       };
       req.onsuccess = function (e) {
         var db = e.target.result;
         if (!db.objectStoreNames.contains('sessions')) {
           db.close();
-          var nextVer = (db.version || 2) + 1;
+          var nextVer = (db.version || 4) + 1;
           var upReq = indexedDB.open('mixota-audio', nextVer);
           upReq.onupgradeneeded = function (ev) {
             var udb = ev.target.result;
             if (!udb.objectStoreNames.contains('sessions')) {
               udb.createObjectStore('sessions', { keyPath: 'id' });
+            }
+            if (!udb.objectStoreNames.contains('recovery')) {
+              udb.createObjectStore('recovery', { keyPath: 'projectId' });
+            }
+            if (!udb.objectStoreNames.contains('projects_meta')) {
+              udb.createObjectStore('projects_meta', { keyPath: 'id' });
             }
           };
           upReq.onsuccess = function (ev) {

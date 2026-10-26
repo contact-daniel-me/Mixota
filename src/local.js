@@ -3,7 +3,7 @@
 
 	var db;
 	var db_name    = 'mixota-audio';
-	var db_version = 3; // Upgraded for project management & recovery stores
+	var db_version = 4; // Upgraded for project management & recovery stores
 	var db_ready   = false;
 
 	var compressors = {
@@ -15,12 +15,17 @@
 			init : function ( callback ) {
 
 				var q = this;
+				if (q.ready) {
+					callback && callback ();
+					return ;
+				}
 				q.loading = true;
 
 				var lz4BlockWASM;
+				var codec = (typeof lz4BlockCodec !== 'undefined' ? lz4BlockCodec : (w && w.lz4BlockCodec ? w.lz4BlockCodec : null));
 
-				if (typeof lz4BlockCodec !== 'undefined' && lz4BlockCodec.createInstance) {
-					lz4BlockCodec.createInstance('wasm').then(instance => {
+				if (codec && codec.createInstance) {
+					codec.createInstance('wasm').then(function(instance) {
 					    lz4BlockWASM = instance;
 
 					    q.ready = true;
@@ -48,10 +53,12 @@
 
 						callback && callback ();
 					}).catch(function() {
+						q.ready = true;
 						q.loading = false;
 						callback && callback ();
 					});
 				} else {
+					q.ready = true;
 					q.loading = false;
 					callback && callback ();
 				}
@@ -165,7 +172,15 @@
 			var projectType = (extraProps && extraProps.projectType) ||
 				(app.multitrack && app.multitrack.IsOn && app.multitrack.IsOn() ? 'multitrack' : 'waveform');
 
-			var thumb = buffer ? PKAudioEditor.engine.GetWave (buffer) : '';
+			var thumb = '';
+			try {
+				if (buffer && PKAudioEditor.engine && PKAudioEditor.engine.GetWave) {
+					thumb = PKAudioEditor.engine.GetWave(buffer);
+				}
+			} catch (e) {
+				console.warn('Could not generate waveform thumbnail:', e);
+				thumb = '';
+			}
 			var now = Date.now();
 
 			var ob = {
@@ -205,9 +220,15 @@
 			};
 
 			try {
-				var trans = db.transaction(['sessions', 'projects_meta'], 'readwrite');
+				var storeNames = ['sessions'];
+				var hasMeta = db.objectStoreNames.contains('projects_meta');
+				if (hasMeta) storeNames.push('projects_meta');
+
+				var trans = db.transaction(storeNames, 'readwrite');
 				trans.objectStore('sessions').put(ob);
-				trans.objectStore('projects_meta').put(meta);
+				if (hasMeta) {
+					trans.objectStore('projects_meta').put(meta);
+				}
 
 				trans.onerror = function(e) {
 					console.warn('IndexedDB put error:', e);
@@ -320,43 +341,65 @@
 				return ;
 			}
 
+			if (!db.objectStoreNames.contains('projects_meta')) {
+				scanLegacySessions(search, new Set(), sortBy, sortOrder, callback);
+				return ;
+			}
+
 			try {
-				var trans = db.transaction(['projects_meta', 'recovery'], 'readonly');
+				var stores = ['projects_meta'];
+				var hasRec = db.objectStoreNames.contains('recovery');
+				if (hasRec) stores.push('recovery');
+
+				var trans = db.transaction(stores, 'readonly');
 				var metaStore = trans.objectStore('projects_meta');
-				var recoveryStore = trans.objectStore('recovery');
 
 				var ret = [];
 				var recoveryIds = new Set();
 
-				var recReq = recoveryStore.openCursor();
-				recReq.onsuccess = function(ev) {
-					var cursor = ev.target.result;
-					if (cursor) {
-						recoveryIds.add(cursor.primaryKey);
-						cursor.continue();
-					} else {
-						// Now read projects_meta
-						var metaReq = metaStore.openCursor();
-						metaReq.onsuccess = function(e2) {
-							var c2 = e2.target.result;
-							if (c2) {
-								var item = c2.value;
-								item.hasRecovery = recoveryIds.has(item.id);
-								if (!search || (item.name && item.name.toLowerCase().indexOf(search) !== -1)) {
-									ret.push(item);
-								}
-								c2.continue();
-							} else {
-								// If projects_meta was empty, fallback to legacy sessions store
-								if (ret.length === 0) {
-									scanLegacySessions(search, recoveryIds, sortBy, sortOrder, callback);
-									return ;
-								}
-								sortAndReturn(ret, sortBy, sortOrder, callback);
+				var startReadMeta = function () {
+					var metaReq = metaStore.openCursor();
+					metaReq.onsuccess = function(e2) {
+						var c2 = e2.target.result;
+						if (c2) {
+							var item = c2.value;
+							item.hasRecovery = recoveryIds.has(item.id);
+							if (!search || (item.name && item.name.toLowerCase().indexOf(search) !== -1)) {
+								ret.push(item);
 							}
-						};
-					}
+							c2.continue();
+						} else {
+							// If projects_meta was empty, fallback to legacy sessions store
+							if (ret.length === 0) {
+								scanLegacySessions(search, recoveryIds, sortBy, sortOrder, callback);
+								return ;
+							}
+							sortAndReturn(ret, sortBy, sortOrder, callback);
+						}
+					};
+					metaReq.onerror = function() {
+						scanLegacySessions(search, recoveryIds, sortBy, sortOrder, callback);
+					};
 				};
+
+				if (hasRec) {
+					var recoveryStore = trans.objectStore('recovery');
+					var recReq = recoveryStore.openCursor();
+					recReq.onsuccess = function(ev) {
+						var cursor = ev.target.result;
+						if (cursor) {
+							recoveryIds.add(cursor.primaryKey);
+							cursor.continue();
+						} else {
+							startReadMeta();
+						}
+					};
+					recReq.onerror = function() {
+						startReadMeta();
+					};
+				} else {
+					startReadMeta();
+				}
 			} catch (e) {
 				callback && callback ([]);
 			}
@@ -364,9 +407,17 @@
 
 		function scanLegacySessions ( search, recoveryIds, sortBy, sortOrder, callback ) {
 			try {
-				var trans = db.transaction(['sessions', 'projects_meta'], 'readwrite');
+				if (!db || !db.objectStoreNames.contains('sessions')) {
+					callback && callback ([]);
+					return ;
+				}
+				var stores = ['sessions'];
+				var hasMeta = db.objectStoreNames.contains('projects_meta');
+				if (hasMeta) stores.push('projects_meta');
+
+				var trans = db.transaction(stores, hasMeta ? 'readwrite' : 'readonly');
 				var sessStore = trans.objectStore('sessions');
-				var metaStore = trans.objectStore('projects_meta');
+				var metaStore = hasMeta ? trans.objectStore('projects_meta') : null;
 				var req = sessStore.openCursor();
 				var list = [];
 
@@ -389,7 +440,9 @@
 							thumb: v.thumb || '',
 							hasRecovery: recoveryIds.has(v.id)
 						};
-						try { metaStore.put(meta); } catch (err) {}
+						if (metaStore) {
+							try { metaStore.put(meta); } catch (err) {}
+						}
 						if (!search || meta.name.toLowerCase().indexOf(search) !== -1) {
 							list.push(meta);
 						}
@@ -523,9 +576,15 @@
 				};
 
 				try {
-					var trans = db.transaction(['sessions', 'projects_meta'], 'readwrite');
+					var stores = ['sessions'];
+					var hasMeta = db.objectStoreNames.contains('projects_meta');
+					if (hasMeta) stores.push('projects_meta');
+
+					var trans = db.transaction(stores, 'readwrite');
 					trans.objectStore('sessions').put(duplicateOb);
-					trans.objectStore('projects_meta').put(duplicateMeta);
+					if (hasMeta) {
+						trans.objectStore('projects_meta').put(duplicateMeta);
+					}
 
 					trans.oncomplete = function() {
 						callback && callback (duplicateMeta);
@@ -546,10 +605,14 @@
 			}
 
 			try {
-				var trans = db.transaction(['sessions', 'projects_meta', 'recovery'], 'readwrite');
+				var stores = ['sessions'];
+				if (db.objectStoreNames.contains('projects_meta')) stores.push('projects_meta');
+				if (db.objectStoreNames.contains('recovery')) stores.push('recovery');
+
+				var trans = db.transaction(stores, 'readwrite');
 				trans.objectStore('sessions').delete(id);
-				trans.objectStore('projects_meta').delete(id);
-				trans.objectStore('recovery').delete(id);
+				if (stores.indexOf('projects_meta') !== -1) trans.objectStore('projects_meta').delete(id);
+				if (stores.indexOf('recovery') !== -1) trans.objectStore('recovery').delete(id);
 
 				trans.oncomplete = function() {
 					callback && callback (true);
@@ -571,19 +634,30 @@
 				return ;
 			}
 
+			if (!db.objectStoreNames.contains('recovery')) {
+				callback && callback (false);
+				return ;
+			}
+
 			try {
-				var trans = db.transaction(['recovery', 'projects_meta'], 'readwrite');
+				var stores = ['recovery'];
+				var hasMeta = db.objectStoreNames.contains('projects_meta');
+				if (hasMeta) stores.push('projects_meta');
+
+				var trans = db.transaction(stores, 'readwrite');
 				trans.objectStore('recovery').put(snapshot);
 
-				var metaStore = trans.objectStore('projects_meta');
-				var metaReq = metaStore.get(snapshot.projectId);
-				metaReq.onsuccess = function() {
-					var meta = metaReq.result;
-					if (meta) {
-						meta.hasRecovery = true;
-						metaStore.put(meta);
-					}
-				};
+				if (hasMeta) {
+					var metaStore = trans.objectStore('projects_meta');
+					var metaReq = metaStore.get(snapshot.projectId);
+					metaReq.onsuccess = function() {
+						var meta = metaReq.result;
+						if (meta) {
+							meta.hasRecovery = true;
+							metaStore.put(meta);
+						}
+					};
+				}
 
 				trans.oncomplete = function() {
 					callback && callback (true);
@@ -599,6 +673,11 @@
 		this.GetRecoverySnapshot = function ( projectId, callback ) {
 			if (!db) {
 				q.Init (function () { q.GetRecoverySnapshot(projectId, callback); });
+				return ;
+			}
+
+			if (!db.objectStoreNames.contains('recovery')) {
+				callback && callback (null);
 				return ;
 			}
 
@@ -622,19 +701,30 @@
 				return ;
 			}
 
+			if (!db.objectStoreNames.contains('recovery')) {
+				callback && callback (true);
+				return ;
+			}
+
 			try {
-				var trans = db.transaction(['recovery', 'projects_meta'], 'readwrite');
+				var stores = ['recovery'];
+				var hasMeta = db.objectStoreNames.contains('projects_meta');
+				if (hasMeta) stores.push('projects_meta');
+
+				var trans = db.transaction(stores, 'readwrite');
 				trans.objectStore('recovery').delete(projectId);
 
-				var metaStore = trans.objectStore('projects_meta');
-				var metaReq = metaStore.get(projectId);
-				metaReq.onsuccess = function() {
-					var meta = metaReq.result;
-					if (meta) {
-						meta.hasRecovery = false;
-						metaStore.put(meta);
-					}
-				};
+				if (hasMeta) {
+					var metaStore = trans.objectStore('projects_meta');
+					var metaReq = metaStore.get(projectId);
+					metaReq.onsuccess = function() {
+						var meta = metaReq.result;
+						if (meta) {
+							meta.hasRecovery = false;
+							metaStore.put(meta);
+						}
+					};
+				}
 
 				trans.oncomplete = function() {
 					callback && callback (true);
@@ -650,10 +740,19 @@
 				return ;
 			}
 
+			if (!db.objectStoreNames.contains('recovery')) {
+				callback && callback ([]);
+				return ;
+			}
+
 			try {
-				var trans = db.transaction(['recovery', 'projects_meta'], 'readonly');
+				var stores = ['recovery'];
+				var hasMeta = db.objectStoreNames.contains('projects_meta');
+				if (hasMeta) stores.push('projects_meta');
+
+				var trans = db.transaction(stores, 'readonly');
 				var recStore = trans.objectStore('recovery');
-				var metaStore = trans.objectStore('projects_meta');
+				var metaStore = hasMeta ? trans.objectStore('projects_meta') : null;
 				var candidates = [];
 
 				var recReq = recStore.openCursor();
@@ -661,26 +760,39 @@
 					var cursor = ev.target.result;
 					if (cursor) {
 						var snap = cursor.value;
-						var metaReq = metaStore.get(snap.projectId);
-						metaReq.onsuccess = function() {
-							var meta = metaReq.result;
-							var savedAt = meta ? (meta.savedAt || meta.updated || 0) : 0;
-							var savedRev = meta ? (meta.revision || 0) : 0;
+						if (metaStore) {
+							var metaReq = metaStore.get(snap.projectId);
+							metaReq.onsuccess = function() {
+								var meta = metaReq.result;
+								var savedAt = meta ? (meta.savedAt || meta.updated || 0) : 0;
+								var savedRev = meta ? (meta.revision || 0) : 0;
 
-							// Offer recovery if snapshot timestamp is newer or revision is higher
-							if (snap.timestamp > savedAt || snap.revision > savedRev) {
-								candidates.push({
-									projectId: snap.projectId,
-									projectName: snap.projectName || (meta && meta.name) || 'Untitled Project',
-									timestamp: snap.timestamp,
-									snapshotRevision: snap.revision || 1,
-									savedRevision: savedRev,
-									projectType: snap.projectType || 'waveform',
-									data: snap.data,
-									durr: snap.durr
-								});
-							}
-						};
+								// Offer recovery if snapshot timestamp is newer or revision is higher
+								if (snap.timestamp > savedAt || snap.revision > savedRev) {
+									candidates.push({
+										projectId: snap.projectId,
+										projectName: snap.projectName || (meta && meta.name) || 'Untitled Project',
+										timestamp: snap.timestamp,
+										snapshotRevision: snap.revision || 1,
+										savedRevision: savedRev,
+										projectType: snap.projectType || 'waveform',
+										data: snap.data,
+										durr: snap.durr
+									});
+								}
+							};
+						} else {
+							candidates.push({
+								projectId: snap.projectId,
+								projectName: snap.projectName || 'Untitled Project',
+								timestamp: snap.timestamp,
+								snapshotRevision: snap.revision || 1,
+								savedRevision: 0,
+								projectType: snap.projectType || 'waveform',
+								data: snap.data,
+								durr: snap.durr
+							});
+						}
 						cursor.continue();
 					} else {
 						setTimeout(function() {

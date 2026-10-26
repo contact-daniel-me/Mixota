@@ -570,4 +570,38 @@ describe('Mixota Project Management & Autosave Recovery Test Suite', () => {
     });
   });
 
+  describe('6. Top Navigation Brand Removal & Storage Resilience Invariants', () => {
+    it('verifies src/ui.js does not render mascot image or pk_brand in top header', async () => {
+      const fs = await import('fs');
+      const uiSrc = fs.readFileSync('src/ui.js', 'utf8');
+
+      // The top header generator must not append pk_brand or mascot avatar
+      const topHeaderFn = uiSrc.slice(uiSrc.indexOf('function _makeUITopHeader'), uiSrc.indexOf('function _topbarConfig'));
+      expect(topHeaderFn).not.toContain('pk_brand');
+      expect(topHeaderFn).not.toContain('mascot.png');
+    });
+
+    it('verifies src/local.js compressor safely initializes without recursion when lz4BlockCodec is undefined', async () => {
+      const fs = await import('fs');
+      const localSrc = fs.readFileSync('src/local.js', 'utf8');
+
+      // Check db_version is upgraded to 4
+      expect(localSrc).toContain('var db_version = 4;');
+
+      // Check that fallback sets ready: true and loading: false
+      expect(localSrc).toMatch(/codec\.createInstance[\s\S]*?q\.ready\s*=\s*true/);
+      expect(localSrc).toMatch(/\.catch\(function\(\)\s*\{[\s\S]*?q\.ready\s*=\s*true/);
+    });
+
+    it('verifies src/mixota-cms.js matches db_version 4 and creates all required stores', async () => {
+      const fs = await import('fs');
+      const cmsSrc = fs.readFileSync('src/mixota-cms.js', 'utf8');
+
+      expect(cmsSrc).toContain("indexedDB.open('mixota-audio', 4)");
+      expect(cmsSrc).toContain("db.createObjectStore('recovery'");
+      expect(cmsSrc).toContain("db.createObjectStore('projects_meta'");
+    });
+  });
+
 });
+
