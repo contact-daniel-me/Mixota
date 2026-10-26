@@ -280,7 +280,7 @@
 					title: 'Export Audio',
 					body: '<div style="padding:14px 4px;line-height:1.6;font-size:13px;">' +
 						'<div style="font-weight:600;font-size:14px;color:#F3F5F4;margin-bottom:6px;">No audio loaded to export</div>' +
-						'<div style="color:#9CA39F;">Please import an audio file, record from your microphone, or try the demo track before exporting.</div>' +
+						'<div style="color:#9CA39F;">Please import an audio file or record from your microphone before exporting.</div>' +
 						'</div>',
 					buttons: [
 						{
@@ -289,13 +289,6 @@
 							callback: function ( q ) {
 								q.Destroy ();
 								app.fireEvent ('RequestLoadLocalFile');
-							}
-						},
-						{
-							title: 'Try Demo Track',
-							callback: function ( q ) {
-								q.Destroy ();
-								app.engine.LoadSample ('test.mp3');
 							}
 						},
 						{
@@ -2801,35 +2794,29 @@
 		launchpad.innerHTML = 
 			'<div class="pk_lp_card">' +
 				'<div class="pk_lp_header">' +
-					'<div class="pk_lp_mascot"><img src="mascot.png" alt="Mixota" /></div>' +
-					'<h2 class="pk_lp_title">Welcome to Mixota</h2>' +
-					'<p class="pk_lp_subtitle">Universal browser-based workstation for musicians, podcasters, and creators.</p>' +
+					'<h2 class="pk_lp_title">Ready to create?</h2>' +
+					'<p class="pk_lp_subtitle">Import an audio file or record directly to start editing.</p>' +
 				'</div>' +
 				'<div class="pk_lp_dropzone" id="pk_lp_dropzone" tabindex="0" role="button" aria-label="Drop audio files or click to import">' +
 					'<span class="pk_lp_drop_icon">⤓</span>' +
-					'<span class="pk_lp_drop_title">Drag & drop your audio file here</span>' +
+					'<span class="pk_lp_drop_title">Drop an audio file here to get started.</span>' +
 					'<span class="pk_lp_drop_sub">Supports MP3, WAV, FLAC, OGG, WebM & Mixota sessions • 100% Client-Side</span>' +
 				'</div>' +
 				'<div class="pk_lp_actions">' +
-					'<button type="button" class="pk_lp_btn" id="pk_lp_btn_import">' +
+					'<button type="button" class="pk_lp_btn pk_lp_btn_primary" id="pk_lp_btn_import">' +
 						'<span class="pk_lp_btn_icon">📂</span>' +
 						'<span class="pk_lp_btn_text">Import Audio</span>' +
 						'<span class="pk_lp_btn_sub">Load from computer</span>' +
 					'</button>' +
 					'<button type="button" class="pk_lp_btn" id="pk_lp_btn_record">' +
 						'<span class="pk_lp_btn_icon">🎙️</span>' +
-						'<span class="pk_lp_btn_text">Record Voice</span>' +
+						'<span class="pk_lp_btn_text">Record Audio</span>' +
 						'<span class="pk_lp_btn_sub">Capture mic input</span>' +
 					'</button>' +
 					'<button type="button" class="pk_lp_btn" id="pk_lp_btn_multi">' +
 						'<span class="pk_lp_btn_icon">𝍢</span>' +
 						'<span class="pk_lp_btn_text">New Multitrack</span>' +
 						'<span class="pk_lp_btn_sub">Multi-clip arranger</span>' +
-					'</button>' +
-					'<button type="button" class="pk_lp_btn" id="pk_lp_btn_demo">' +
-						'<span class="pk_lp_btn_icon">⚡</span>' +
-						'<span class="pk_lp_btn_text">Try Demo Track</span>' +
-						'<span class="pk_lp_btn_sub">Explore test audio</span>' +
 					'</button>' +
 				'</div>' +
 				'<div class="pk_lp_recents">' +
@@ -3229,20 +3216,35 @@
 
 		footer.appendChild( volume_parent );
 
-		// change temp message, it's pretty ugly #### TODO
+		// Professional Emerald Carbon Waveform Empty State
 		var ttmp = d.createElement('div');
 		ttmp.className = 'pk_tmpMsg pk_ed_empty';
-		ttmp.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;gap:10px;">' +
-		'<img src="mascot.png" style="width:52px;height:52px;border-radius:50%;box-shadow:0 0 20px rgba(0,229,160,0.35);border:1.5px solid #00E5A0;" alt="Mixo"/>' +
-		'<span>Drag and drop an audio file here, or click ' +
-		'<a style="white-space:nowrap;border:1px solid;border-radius:23px;padding:5px 18px;font-size:0.94em;margin-left:5px" '+
-		'onclick="PKAudioEditor.engine.LoadSample()">here to use a sample</a></span></div>';
+		ttmp.innerHTML = 
+			'<div class="pk_empty_state_wrap" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px 20px;max-width:480px;margin:0 auto;color:#F3F5F3;pointer-events:auto;">' +
+				'<div style="width:48px;height:48px;border-radius:12px;background:rgba(0,229,163,0.08);border:1px solid rgba(0,229,163,0.25);display:flex;align-items:center;justify-content:center;margin-bottom:16px;color:#00E5A3;font-size:22px;">∿</div>' +
+				'<h2 style="font-size:20px;font-weight:600;margin:0 0 8px 0;letter-spacing:-0.3px;color:#F3F5F3;">Ready to create?</h2>' +
+				'<p style="font-size:13.5px;color:#A2ABA4;margin:0 0 20px 0;line-height:1.5;">Import an audio file or record directly to start editing.</p>' +
+				'<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;justify-content:center;">' +
+					'<button type="button" class="pk_empty_btn_primary" id="pk_empty_btn_import" style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;background:#00E5A3;color:#0A0B0A;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">' +
+						'<span>📂</span><span>Import Audio</span>' +
+					'</button>' +
+					'<button type="button" class="pk_empty_btn_secondary" id="pk_empty_btn_record" style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;background:#151816;color:#F3F5F3;border:1px solid #292E2B;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;">' +
+						'<span>🎙️</span><span>Record Audio</span>' +
+					'</button>' +
+				'</div>' +
+				'<div style="font-size:11.5px;color:#737B75;letter-spacing:0.2px;">Drop an audio file here to get started.</div>' +
+			'</div>';
 		main_audio_view.appendChild( ttmp );
+
+		var emptyImport = ttmp.querySelector ( '#pk_empty_btn_import' );
+		if (emptyImport) emptyImport.onclick = function () { app.fireEvent ('RequestLoadLocalFile'); };
+		var emptyRecord = ttmp.querySelector ( '#pk_empty_btn_record' );
+		if (emptyRecord) emptyRecord.onclick = function () { app.fireEvent ('RequestActionNewRec'); };
 
 		var ttmp2 = d.createElement('div');
 		ttmp2.className = 'pk_tmpMsg2';
-		ttmp2.innerHTML = '<img src="mascot.png" style="width:40px;height:40px;border-radius:50%;margin-bottom:8px;box-shadow:0 0 16px rgba(0,229,160,0.4);border:1px solid #00E5A0;" alt="Mixo"/>' +
-			'<span>Processing Audio...</span><div class="pk_mload"><div></div></div>' + 
+		ttmp2.innerHTML = '<span style="color:#F3F5F3;font-weight:500;font-size:14px;margin-bottom:8px;display:block;">Processing Audio...</span>' + 
+			'<div class="pk_mload"><div></div></div>' + 
 			'<div class="pk_prc"><span>0%</span>' + 
 			'<button tabIndex="-1" class="pk_btn" '+
 			'onclick="PKAudioEditor.fireEvent(\'RequestCancelModal\');">cancel</button></div>';
@@ -3314,11 +3316,11 @@
 		};
 
 		var lpDemo = launchpad.querySelector ( '#pk_lp_btn_demo' );
-		if (lpDemo) lpDemo.onclick = function () {
-			var sub = lpDemo.querySelector ( '.pk_lp_btn_sub' );
-			if (sub) sub.textContent = 'Loading test.mp3...';
-			app.engine.LoadSample ('test.mp3');
-		};
+		if (lpDemo) {
+			lpDemo.onclick = function () {
+				app.fireEvent ('RequestLoadLocalFile');
+			};
+		}
 
 		function refreshRecentsList () {
 			var listEl = launchpad.querySelector ( '#pk_lp_recents_list' );
@@ -3481,14 +3483,11 @@
 						'<div class="pk_mst_empty_text">No audio loaded in workstation. Load or record a track, or Bounce from Multitrack to begin mastering.</div>' +
 						'<div style="display:flex;gap:10px;margin-top:6px;">' +
 							'<button type="button" class="pk_mst_btn_load" id="pk_mst_load_btn">📂 Import Audio File</button>' +
-							'<button type="button" class="pk_mst_btn_load" id="pk_mst_demo_btn">♫ Try Demo Track</button>' +
 						'</div>' +
 					'</div>';
 
 				var loadBtn = mastering_panel.querySelector ( '#pk_mst_load_btn' );
 				if (loadBtn) loadBtn.onclick = function () { app.fireEvent ('RequestLoadLocalFile'); };
-				var demoBtn = mastering_panel.querySelector ( '#pk_mst_demo_btn' );
-				if (demoBtn) demoBtn.onclick = function () { app.engine.LoadSample ('test.mp3'); };
 				return ;
 			}
 

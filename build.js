@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
@@ -61,12 +61,14 @@ try {
   }
 }
 
-// Copy main.build.css to all.css for standalone cached builds
-const cssSource = path.join(srcDir, 'main.build.css');
+// Sync main.css to all.css and main.build.css for standalone cached builds
+const cssSource = path.join(srcDir, 'main.css');
 const cssDest = path.join(srcDir, 'all.css');
+const cssBuildDest = path.join(srcDir, 'main.build.css');
 if (fs.existsSync(cssSource)) {
   fs.copyFileSync(cssSource, cssDest);
-  console.log(`Synced ${cssDest}`);
+  fs.copyFileSync(cssSource, cssBuildDest);
+  console.log(`Synced ${cssDest} and ${cssBuildDest}`);
 }
 
 console.log('Mixota build complete!');

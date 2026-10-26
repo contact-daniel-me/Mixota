@@ -120,17 +120,8 @@
 			['#100d10', '#a48aa0', '#665164'],
 			['#0d0f13', '#879db1', '#4d6277']
 		];
-		var multi_sample_files = [
-			{ f: 'guitar-lead.mp3', v: 0.966667, p: 0.25, c: [[0, 0, 7.09], [14.01, 14.01]] },
-			{ f: 'guitar-rhythm.mp3', p: -0.10, c: [[7.077, 7.077]] },
-			{ f: 'drums.mp3', c: [[0, 0, 38.317688], [52.58218, 28.191393, 34.927124, 0.06652], [76.963829, 52.596916]] },
-			{ f: 'bass.mp3', c: [[0, 0, 28.274], [28.274, 28.274, 77.015877], [77.015877, 28.274, 52.877399, 0, 0.897889]] },
-			{ f: 'piano.mp3', v: 0.92, c: [[34.283047, 6.008046, 48.787418, 0.113838], [77.015877, 0, 24.399876, 0, 0, 1]] },
-			{ f: 'harp-2.mp3', v: 0.93, p: 0.12, c: [[46.600136, 18.325136, 50.253502, 0.08255], [77.015877, 0, 24.399876, 0, 0, 1]] },
-			{ f: 'picolo-1.mp3', v: 0.78, c: [[49.592648, 21.317646, 48.777374, 0.051594], [77.015877, 0, 24.399876, 0, 0, 1]] },
-			{ f: 'flute-1.mp3', p: -0.20, c: [[37.748508, 9.473508, 48.740875, 3.826093], [77.015877, 0, 24.399876]] },
-			{ f: 'choirs.mp3', v: 0.96, c: [[76.985, 0]] }
-		];
+		var multi_sample_files = [];
+
 
 		function setActiveDrag(fn) {
 			cancelActiveDrag();
@@ -607,10 +598,22 @@
 				'<div class="pk_mt_main">' +
 				'<div class="pk_mt_ruler"></div>' +
 				'<div class="pk_mt_lanes"></div>' +
-				'<div class="pk_tmpMsg pk_mt_empty" style="display:flex;flex-direction:column;align-items:center;gap:10px;">' +
-				'<img src="mascot.png" style="width:48px;height:48px;border-radius:50%;box-shadow:0 0 16px rgba(0,229,160,0.35);border:1px solid #00E5A0;" alt="Mixo"/>' +
-				'<span>Drag and Drop Audio Files in this window, or click ' +
-				'<a>here to use a sample</a></span></div>' +
+				'<div class="pk_tmpMsg pk_mt_empty">' +
+				'<div class="pk_empty_state_wrap" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px 20px;max-width:480px;margin:0 auto;color:#F3F5F3;pointer-events:auto;">' +
+				'<div style="width:48px;height:48px;border-radius:12px;background:rgba(0,229,163,0.08);border:1px solid rgba(0,229,163,0.25);display:flex;align-items:center;justify-content:center;margin-bottom:16px;color:#00E5A3;font-size:22px;">𝍢</div>' +
+				'<h2 style="font-size:20px;font-weight:600;margin:0 0 8px 0;letter-spacing:-0.3px;color:#F3F5F3;">Ready to create?</h2>' +
+				'<p style="font-size:13.5px;color:#A2ABA4;margin:0 0 20px 0;line-height:1.5;">Import an audio file or record directly to start editing.</p>' +
+				'<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;justify-content:center;">' +
+				'<button type="button" class="pk_empty_btn_primary" id="pk_mt_empty_btn_import" style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;background:#00E5A3;color:#0A0B0A;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">' +
+				'<span>📂</span><span>Import Audio</span>' +
+				'</button>' +
+				'<button type="button" class="pk_empty_btn_secondary" id="pk_mt_empty_btn_record" style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;background:#151816;color:#F3F5F3;border:1px solid #292E2B;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;">' +
+				'<span>🎙️</span><span>Record Audio</span>' +
+				'</button>' +
+				'</div>' +
+				'<div style="font-size:11.5px;color:#737B75;letter-spacing:0.2px;">Drop an audio file here to get started.</div>' +
+				'</div>' +
+				'</div>' +
 				'<div class="pk_mt_region wavesurfer-region"></div>' +
 				'<div class="pk_mt_playhead"></div>' +
 				'<div class="pk_mt_marker"></div>' +
@@ -632,9 +635,15 @@
 			if (app.mrk) app.mrk.mt(main, ruler, function () { return px_per_sec; }, function () { return on; });
 			buildHeader();
 			addRegionHandles();
-			empty_el.getElementsByTagName('a')[0].onclick = function (e) {
+			var mtImport = empty_el.querySelector('#pk_mt_empty_btn_import');
+			if (mtImport) mtImport.onclick = function (e) {
 				e.preventDefault();
-				loadMultiSample();
+				app.fireEvent('RequestLoadLocalFile');
+			};
+			var mtRecord = empty_el.querySelector('#pk_mt_empty_btn_record');
+			if (mtRecord) mtRecord.onclick = function (e) {
+				e.preventDefault();
+				app.fireEvent('RequestActionNewRec');
 			};
 			main.addEventListener('wheel', wheelZoom, { passive: false });
 			el.addEventListener('gesturestart', gestureStart, { passive: false, capture: true });
@@ -4267,7 +4276,7 @@
 		}
 
 		function loadMultiSample() {
-			if (sample_loading) return;
+			if (sample_loading || !multi_sample_files.length) return;
 			sample_loading = true;
 			var prev = cloneState();
 			var zoom = captureZoom();

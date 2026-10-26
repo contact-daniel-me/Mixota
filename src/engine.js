@@ -353,6 +353,7 @@
 			}
 		}
 		this.LoadSample = function ( file ) {
+			if (!file) return;
 			app.fireEvent ('WillDownloadFile');
 
 			setTimeout(function () {
@@ -372,7 +373,7 @@
 
 				app.fireEvent ('RequestZoomUI', 0);
 				q.is_ready = false;
-				wavesurfer.load (file || 'piano-sample.mp3');
+				wavesurfer.load (file);
 			}, 180);
 		}
 		this.LoadURL = function ( url ) {
