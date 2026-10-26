@@ -20,6 +20,9 @@ describe('Phase 1: Universal Workspace Experience', () => {
         this.history.push({ from: prev, to: ws });
 
         if (ws === 'multitrack') {
+          if (!this.app.multitrack && this.app._deps && this.app._deps.multitrack) {
+            this.app.multitrack = new this.app._deps.multitrack(this.app);
+          }
           this.app.multitrack.Toggle(true);
           this.app.mastering.setOpen(false);
         } else if (ws === 'mastering') {
@@ -85,6 +88,27 @@ describe('Phase 1: Universal Workspace Experience', () => {
     it('rejects invalid workspace identifiers safely', () => {
       expect(() => wsManager.setWorkspace('unknown')).toThrow(/Invalid workspace/);
       expect(wsManager.activeWorkspace).toBe('waveform');
+    });
+
+    it('instantiates multitrack on-demand if app.multitrack is missing but _deps.multitrack is available', () => {
+      const toggleFn = vi.fn();
+      const mockDepsApp = {
+        multitrack: null,
+        _deps: {
+          multitrack: class {
+            constructor(app) {
+              this.app = app;
+              this.Toggle = toggleFn;
+            }
+          }
+        },
+        mastering: { setOpen: vi.fn() }
+      };
+      const mgr = new WorkspaceManager(mockDepsApp);
+      mgr.setWorkspace('multitrack');
+      expect(mockDepsApp.multitrack).toBeTruthy();
+      expect(toggleFn).toHaveBeenCalledWith(true);
+      expect(mgr.activeWorkspace).toBe('multitrack');
     });
   });
 

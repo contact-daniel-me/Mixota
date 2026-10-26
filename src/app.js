@@ -130,7 +130,12 @@
 			q.rec    = new q._deps.rec ( q );
 			q.fls    = new q._deps.fls ( q );
 			q.amss   = q._deps.amss ? new q._deps.amss ( q ) : null;
-			q.multitrack = q._deps.multitrack ? new q._deps.multitrack ( q ) : null;
+			try {
+				q.multitrack = q._deps.multitrack ? new q._deps.multitrack ( q ) : null;
+			} catch (e) {
+				console.error ('Failed to initialize PKMultitrack:', e);
+				q.multitrack = null;
+			}
 			if (w.PKAudioEditor && w.PKAudioEditor.ShortcutManager) {
 				q.shortcuts = w.PKAudioEditor.ShortcutManager.init ( q );
 			}

@@ -2248,6 +2248,13 @@
 				if (UI.el.classList.contains ('pk_mastering_on')) {
 					UI.el.classList.remove ('pk_mastering_on');
 				}
+				if (!app.multitrack && app._deps && app._deps.multitrack) {
+					try {
+						app.multitrack = new app._deps.multitrack ( app );
+					} catch (e) {
+						console.error ('Failed to instantiate multitrack on demand:', e);
+					}
+				}
 				if (app && app.multitrack) {
 					if (!app.multitrack.IsOn || !app.multitrack.IsOn ()) {
 						app.multitrack.Toggle (true);
@@ -3268,8 +3275,9 @@
 		// Launchpad wiring & visibility
 		function checkLaunchpadVisibility () {
 			var hasAudio = !!(app.engine && app.engine.is_ready);
-			var isMultitrack = !!(app.multitrack && app.multitrack.IsOn && app.multitrack.IsOn ());
-			if (!hasAudio && !isMultitrack) {
+			var isMultitrack = !!(app.multitrack && app.multitrack.IsOn && app.multitrack.IsOn ()) || activeWorkspace === 'multitrack';
+			var isMastering = (UI.el && UI.el.classList.contains ('pk_mastering_on')) || activeWorkspace === 'mastering';
+			if (!hasAudio && !isMultitrack && !isMastering) {
 				launchpad.style.display = 'flex';
 				refreshRecentsList ();
 			} else {

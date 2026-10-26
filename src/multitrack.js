@@ -713,49 +713,24 @@
 
 			var existing = actions.getElementsByClassName('pk_mt_topbtn');
 			while (existing.length > 0) {
-				existing[0].parentNode.removeChild(existing[0]);
+				if (existing[0].parentNode) existing[0].parentNode.removeChild(existing[0]);
+				else break;
 			}
 
 			btn_toggle = d.createElement('button');
 			btn_toggle.setAttribute('tabIndex', -1);
 			btn_toggle.className = 'pk_mt_topbtn';
+			// In Mixota, the universal workspace tab switcher (#pk-tab-multitrack) controls
+			// entering and exiting Multitrack workspace. We keep btn_toggle hidden so that
+			// internal toggle state styling or listeners continue to function safely.
+			btn_toggle.style.display = 'none';
 			btn_toggle.innerHTML = 'MultiTrack<em>Beta</em>';
 			btn_toggle.onclick = function () {
 				Toggle();
 				this.blur();
 			};
 
-			// Find Help menu element among direct children of pk_hdr
-			var help_btn = null;
-			for (var i = 0; i < actions.children.length; ++i) {
-				var ch = actions.children[i];
-				var txt = (ch.innerText || ch.textContent || '').trim().toLowerCase();
-				if (txt.indexOf('help') === 0 || txt === 'help') {
-					help_btn = ch;
-					break;
-				}
-			}
-
-			var shortcuts_btn = actions.querySelector('.pk_hdr_shortcuts_btn');
-			if (shortcuts_btn && shortcuts_btn.nextSibling) {
-				actions.insertBefore(btn_toggle, shortcuts_btn.nextSibling);
-			} else if (help_btn) {
-				actions.insertBefore(btn_toggle, help_btn);
-			} else {
-				var buttons = actions.getElementsByClassName('pk_btn');
-				for (var j = 0; j < buttons.length; ++j) {
-					var b = buttons[j].getElementsByTagName('button')[0];
-					if (b && (b.innerText || b.textContent || '').trim().toLowerCase() === 'help') {
-						help_btn = buttons[j];
-						break;
-					}
-				}
-				if (help_btn && help_btn.parentNode === actions) {
-					actions.insertBefore(btn_toggle, help_btn);
-				} else {
-					actions.appendChild(btn_toggle);
-				}
-			}
+			actions.appendChild(btn_toggle);
 		}
 
 		function attachBeatToolbar() {
@@ -826,7 +801,7 @@
 				this.blur();
 			};
 			beat_bar.appendChild(btn_bounce);
-			if (sel && sel.nextSibling) toolbar.insertBefore(beat_bar, sel.nextSibling);
+			if (sel && sel.parentNode === toolbar && sel.nextSibling) toolbar.insertBefore(beat_bar, sel.nextSibling);
 			else toolbar.appendChild(beat_bar);
 			updateBeatUI();
 		}
@@ -906,7 +881,9 @@
 			}
 			else {
 				syncEditingClip();
-				app.engine.wavesurfer.pause();
+				if (app.engine && app.engine.wavesurfer) {
+					try { app.engine.wavesurfer.pause(); } catch (e) {}
+				}
 				if (!did_init_zoom) {
 					did_init_zoom = true;
 					resetHorizontalZoom();
