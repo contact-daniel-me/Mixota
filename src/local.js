@@ -882,6 +882,7 @@
 			if (!statusEl) return ;
 
 			statusEl.classList.remove('pk_status_clean', 'pk_status_dirty', 'pk_status_saving', 'pk_status_error', 'pk_status_recovery');
+			statusEl.style.display = '';
 
 			if (status === 'Saved') {
 				statusEl.classList.add('pk_status_clean');
@@ -896,10 +897,7 @@
 				statusEl.innerHTML = '<span class="pk_save_dot"></span>Saving…';
 				statusEl.title = 'Writing to local storage';
 			} else if (status === 'Error') {
-				statusEl.classList.add('pk_status_dirty');
-				statusEl.innerHTML = '<span class="pk_save_dot"></span>Unsaved edits';
-				statusEl.title = 'Click to retry saving';
-				statusEl.onclick = function() { self.saveImmediately(); };
+				statusEl.style.display = 'none';
 			} else if (status === 'Recovery') {
 				statusEl.classList.add('pk_status_recovery');
 				statusEl.innerHTML = '<span class="pk_save_dot"></span>Recovery available';
