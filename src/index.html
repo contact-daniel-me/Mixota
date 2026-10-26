@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 	<title>Mixota</title>
@@ -32,7 +32,7 @@
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
-	<link rel="stylesheet" type="text/css" href="main.css">
+	<link rel="stylesheet" type="text/css" href="main.css?v=2.0">
 	<link rel="stylesheet" type="text/css" href="mixota-cms.css">
 </head>
 <body>
@@ -42,16 +42,16 @@
 	<script src="dist/plugin/wavesurfer.regions.js"></script>
 	<script src="oneup.js"></script>
 
-	<script src="app.js"></script>
+	<script src="app.js?v=2.0"></script>
 	<script src="keys.js"></script>
 	<script src="markers.js"></script>
 	<script src="contextmenu.js"></script>
 	<script src="lufs.js"></script>
 	<script src="ui-fx.js"></script>
-	<script src="ui.js"></script>
+	<script src="ui.js?v=2.0"></script>
 	<script src="modal.js"></script>
 	<script src="state.js"></script>
-	<script src="engine.js"></script>
+	<script src="engine.js?v=2.0"></script>
 	<script src="actions.js"></script>
 	<script src="drag.js"></script>
 	<script src="recorder.js"></script>
@@ -64,12 +64,12 @@
 	<script src="lzma.js"></script>
 	<script src="dist/supabase.js"></script>
 	<script src="mixota-format.js"></script>
-	<script src="multitrack.js?v=1.1"></script>
+	<script src="multitrack.js?v=2.0"></script>
 	<script>
 		var editor = PKAudioEditor.init ('app');
 		if ('serviceWorker' in navigator) {
 			try {
-				navigator.serviceWorker.register( 'sw.js' );
+				navigator.serviceWorker.register( 'sw.js?v=2.0' );
 			} catch ( error ) {}
 		}
 	</script>
