@@ -879,29 +879,8 @@
 		this.updateUIStatus = function ( status, label ) {
 			self.status = status;
 			var statusEl = d.getElementById('pk_hdr_save_status');
-			if (!statusEl) return ;
-
-			statusEl.classList.remove('pk_status_clean', 'pk_status_dirty', 'pk_status_saving', 'pk_status_error', 'pk_status_recovery');
-			statusEl.style.display = '';
-
-			if (status === 'Saved') {
-				statusEl.classList.add('pk_status_clean');
-				statusEl.innerHTML = '<span class="pk_save_dot"></span>Saved';
-				statusEl.title = 'All edits saved locally';
-			} else if (status === 'Unsaved') {
-				statusEl.classList.add('pk_status_dirty');
-				statusEl.innerHTML = '<span class="pk_save_dot"></span>Unsaved edits';
-				statusEl.title = 'Unsaved changes pending autosave';
-			} else if (status === 'Saving') {
-				statusEl.classList.add('pk_status_saving');
-				statusEl.innerHTML = '<span class="pk_save_dot"></span>Saving…';
-				statusEl.title = 'Writing to local storage';
-			} else if (status === 'Error') {
+			if (statusEl) {
 				statusEl.style.display = 'none';
-			} else if (status === 'Recovery') {
-				statusEl.classList.add('pk_status_recovery');
-				statusEl.innerHTML = '<span class="pk_save_dot"></span>Recovery available';
-				statusEl.title = 'Unsaved work detected from a previous session';
 			}
 		};
 

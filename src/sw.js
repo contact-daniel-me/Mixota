@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mixota-v9';
+const CACHE_NAME = 'mixota-v10';
 const assets = [
 	'./',
 	'./manifest.json',

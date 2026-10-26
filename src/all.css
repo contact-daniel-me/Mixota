@@ -2397,18 +2397,7 @@ input,textarea{-webkit-touch-callout:none}
 }
 
 .pk_hdr_save_status {
-	font-family: var(--ff);
-	font-size: 11px;
-	white-space: nowrap;
-}
-.pk_hdr_save_status.pk_status_clean {
-	color: var(--fg-2);
-}
-.pk_hdr_save_status.pk_status_saved {
-	color: var(--ac);
-}
-.pk_hdr_save_status.pk_status_unsaved {
-	color: var(--warn);
+	display: none !important;
 }
 
 .pk_hdr_export_btn {

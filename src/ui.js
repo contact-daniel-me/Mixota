@@ -2314,10 +2314,9 @@
 		right_wrap.appendChild ( telemetryBadge );
 
 		var saveStatus = d.createElement ( 'span' );
-		saveStatus.className = 'pk_hdr_save_status pk_status_clean';
+		saveStatus.className = 'pk_hdr_save_status';
 		saveStatus.id = 'pk_hdr_save_status';
-		saveStatus.textContent = 'Clean';
-		right_wrap.appendChild ( saveStatus );
+		saveStatus.style.display = 'none';
 
 		function updateTelemetry () {
 			var ws = app && app.engine && app.engine.wavesurfer;
