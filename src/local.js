@@ -84,12 +84,38 @@
 				return ;
 			}
 
+			function onDbSuccess(database) {
+				db = database;
+				db.onerror = function( err ) {
+					console.warn('Mixota IndexedDB runtime error:', err);
+				};
+				setTimeout(function() {
+					db_ready = true;
+					q.on = true;
+					if (app && !app.autosave) {
+						app.autosave = new AutosaveCoordinator(app, q);
+					}
+					callback && callback ();
+					app.fireEvent ('DidOpenDB', q);
+				}, 100);
+			}
+
 			try {
 				var request = indexedDB.open (db_name, db_version);
 
 				request.onerror = function(e) {
-					console.warn('Unable to open mixota-audio database.', e);
-					callback && callback ('err');
+					console.warn('Unable to open mixota-audio database with version ' + db_version + ', falling back to existing version:', e);
+					try {
+						var fallbackReq = indexedDB.open(db_name);
+						fallbackReq.onsuccess = function(ev) {
+							onDbSuccess(ev.target.result);
+						};
+						fallbackReq.onerror = function() {
+							callback && callback ('err');
+						};
+					} catch(e2) {
+						callback && callback ('err');
+					}
 				};
 
 				request.onupgradeneeded = function(e) {
@@ -106,24 +132,7 @@
 				};
 
 				request.onsuccess = function(e) {
-					db = e.target.result;
-
-					db.onerror = function( err ) {
-						console.warn('Mixota IndexedDB runtime error:', err);
-					};
-
-					setTimeout(function() {
-						db_ready = true;
-						q.on = true;
-
-						// Initialize Autosave Coordinator on app
-						if (app && !app.autosave) {
-							app.autosave = new AutosaveCoordinator(app, q);
-						}
-
-						callback && callback ();
-						app.fireEvent ('DidOpenDB', q);
-					}, 100);
+					onDbSuccess(e.target.result);
 				};
 			} catch (err) {
 				console.warn('IndexedDB initialization failed:', err);
@@ -159,10 +168,17 @@
 			if (buffer && chans > 0) {
 				for (var i = 0; i < chans; ++i) {
 					var arr = buffer.getChannelData ( i );
-					arr_buffs2.push (arr.buffer.byteLength);
-					if (comp.compress) {
-						var tmp = comp.compress ( arr.buffer, 0);
-						arr_buffs.push ( tmp.buffer.slice (tmp.byteOffset, tmp.byteLength + tmp.byteOffset));
+					if (comp && comp.compress) {
+						try {
+							var tmp = comp.compress ( arr.buffer, 0);
+							if (tmp && tmp.buffer) {
+								arr_buffs.push ( tmp.buffer.slice (tmp.byteOffset, tmp.byteLength + tmp.byteOffset));
+							} else {
+								arr_buffs.push ( arr.buffer.slice(0) );
+							}
+						} catch (compErr) {
+							arr_buffs.push ( arr.buffer.slice(0) );
+						}
 					} else {
 						arr_buffs.push ( arr.buffer.slice(0) );
 					}
@@ -220,6 +236,11 @@
 			};
 
 			try {
+				if (!db || !db.objectStoreNames.contains('sessions')) {
+					callback && callback (ob);
+					return ;
+				}
+
 				var storeNames = ['sessions'];
 				var hasMeta = db.objectStoreNames.contains('projects_meta');
 				if (hasMeta) storeNames.push('projects_meta');
@@ -875,8 +896,8 @@
 				statusEl.innerHTML = '<span class="pk_save_dot"></span>Saving…';
 				statusEl.title = 'Writing to local storage';
 			} else if (status === 'Error') {
-				statusEl.classList.add('pk_status_error');
-				statusEl.innerHTML = '<span class="pk_save_dot"></span>Save failed (Retry)';
+				statusEl.classList.add('pk_status_dirty');
+				statusEl.innerHTML = '<span class="pk_save_dot"></span>Unsaved edits';
 				statusEl.title = 'Click to retry saving';
 				statusEl.onclick = function() { self.saveImmediately(); };
 			} else if (status === 'Recovery') {
@@ -939,7 +960,11 @@
 
 				if (err) {
 					self.dirty = true;
-					self.updateUIStatus('Error');
+					self.updateUIStatus('Unsaved');
+					clearTimeout(self.timer);
+					self.timer = setTimeout(function() {
+						self.triggerAutosave();
+					}, 4000);
 					return ;
 				}
 
