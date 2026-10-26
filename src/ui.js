@@ -3275,8 +3275,9 @@
 		// Launchpad wiring & visibility
 		function checkLaunchpadVisibility () {
 			var hasAudio = !!(app.engine && app.engine.is_ready);
-			var isMultitrack = !!(app.multitrack && app.multitrack.IsOn && app.multitrack.IsOn ()) || activeWorkspace === 'multitrack';
-			var isMastering = (UI.el && UI.el.classList.contains ('pk_mastering_on')) || activeWorkspace === 'mastering';
+			var currentWs = UI.getActiveWorkspace ? UI.getActiveWorkspace () : 'waveform';
+			var isMultitrack = !!(app.multitrack && app.multitrack.IsOn && app.multitrack.IsOn ()) || currentWs === 'multitrack';
+			var isMastering = (UI.el && UI.el.classList.contains ('pk_mastering_on')) || currentWs === 'mastering';
 			if (!hasAudio && !isMultitrack && !isMastering) {
 				launchpad.style.display = 'flex';
 				refreshRecentsList ();
